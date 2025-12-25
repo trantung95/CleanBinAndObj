@@ -4,12 +4,20 @@
   "description": "Clean all bin and obj directories in your workspace",
   "version": "1.0.0",
   "publisher": "hybr8",
+  "homepage": "https://github.com/trantung95/CleanBinAndObj#readme",
+  "bugs": {
+    "url": "https://github.com/trantung95/CleanBinAndObj/issues"
+  },
   "engines": {
     "vscode": "^1.75.0"
   },
   "categories": [
     "Other"
   ],
+  "galleryBanner": {
+    "color": "#0078D7",
+    "theme": "dark"
+  },
   "activationEvents": [],
   "main": "./extension.js",
   "contributes": {
