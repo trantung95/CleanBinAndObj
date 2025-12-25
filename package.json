@@ -2,7 +2,7 @@
   "name": "clean-bin-obj",
   "displayName": "Clean Bin and Obj (CleanBinAndObj)",
   "description": "Quickly clean all bin and obj directories in .NET projects. Remove build artifacts with one command.",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "publisher": "hybr8",
   "homepage": "https://github.com/trantung95/CleanBinAndObj#readme",
   "bugs": {
