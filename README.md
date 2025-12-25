@@ -1,20 +1,42 @@
-# Clean Bin and Obj
+# Clean Bin Obj - .NET Build Cleaner & Rebuild Tool
 
 [![Version](https://img.shields.io/visual-studio-marketplace/v/hybr8.clean-bin-obj?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=hybr8.clean-bin-obj)
 [![Installs](https://img.shields.io/visual-studio-marketplace/i/hybr8.clean-bin-obj?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=hybr8.clean-bin-obj)
 [![Rating](https://img.shields.io/visual-studio-marketplace/r/hybr8.clean-bin-obj?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=hybr8.clean-bin-obj)
 [![License](https://img.shields.io/github/license/trantung95/CleanBinAndObj?style=flat-square)](https://github.com/trantung95/CleanBinAndObj/blob/master/LICENSE)
 
-A Visual Studio Code extension for easily cleaning all `bin` and `obj` directories in your workspace. Perfect for .NET developers who want to quickly clean build artifacts and rebuild projects.
+**The ultimate Visual Studio Code extension for .NET developers!** Instantly clean `bin` and `obj` folders, remove build artifacts, delete temporary files, and rebuild your C#, F#, and VB.NET projects with a single command. Save disk space and fix build issues fast!
 
-## Features
+## 🚀 Why Choose This Extension?
 
-- 🧹 **Clean Bin and Obj folders** in your workspace with a single command
-- 🔄 **Clean and Rebuild** - Clean build artifacts and automatically rebuild projects
-- 🎯 **Smart project detection** - Automatically finds .NET projects (.csproj, .fsproj, .vbproj, .sln)
-- ⚡ **Multiple options** - Clean entire workspace or just the current project
-- ⚙️ **Configurable** - Customize which subdirectories to clean
-- 📊 **Progress tracking** - See real-time progress and detailed output
+Perfect for **.NET Core**, **.NET Framework**, **ASP.NET**, and **Xamarin** developers who need to:
+- 🧹 **Clean build artifacts** from bin and obj folders instantly
+- 🔄 **Rebuild projects** automatically after cleaning
+- 💾 **Free up disk space** by removing gigabytes of temporary build files
+- 🐛 **Fix build errors** caused by corrupted cache
+- 🔀 **Switch Git branches** cleanly without build conflicts
+- ⚡ **Boost productivity** with one-click workspace cleanup
+
+## 🎯 Features
+
+- 🧹 **Instant Cleanup** - Delete all bin and obj folders with one command
+- 🔄 **Smart Rebuild** - Automatically rebuild .NET projects after cleaning  
+- 🎯 **Multi-Project Support** - Clean entire workspace or single project
+- 🔍 **Auto-Detection** - Finds .csproj, .fsproj, .vbproj, and .sln files automatically
+- ⚙️ **Fully Configurable** - Customize target directories and patterns
+- 📊 **Real-time Progress** - Visual progress tracking with detailed output logs
+- 💪 **Production Ready** - Battle-tested with large .NET solutions
+- 🚀 **Lightning Fast** - Optimized for performance on big codebases
+
+### Supported Project Types
+✅ C# Projects (.csproj)  
+✅ F# Projects (.fsproj)  
+✅ VB.NET Projects (.vbproj)  
+✅ Solution Files (.sln)  
+✅ .NET Core / .NET 5+ / .NET 6/7/8  
+✅ .NET Framework 4.x  
+✅ ASP.NET Core / ASP.NET MVC  
+✅ Xamarin / MAUI Projects
 
 ## Usage
 
@@ -87,32 +109,54 @@ Configure the extension through VS Code settings:
 [14:23:45.357] Total items cleaned: 154, Errors: 0
 ```
 
-## Why Use This Extension?
+## ❓ Why Use This Extension?
 
-When working with .NET projects, `bin` and `obj` folders can:
-- Accumulate gigabytes of build artifacts
-- Cause issues with version control
-- Create problems when switching branches
-- Interfere with clean builds
+### Common Problems This Extension Solves:
 
-This extension makes it easy to clean these folders across your entire workspace with a single command.
+**💾 Disk Space Issues**
+- Bin and obj folders accumulate gigabytes of build artifacts
+- Each .NET project can consume 100+ MB in temporary files
+- Large solutions can waste several GB of disk space
+
+**🐛 Build Errors**
+- "Type already defines a member" errors
+- Corrupted cache causing mysterious build failures  
+- IntelliSense showing outdated or incorrect suggestions
+- Assembly conflicts and version mismatches
+
+**🔀 Git Branch Problems**
+- Build artifacts causing merge conflicts
+- Switching branches leaves orphaned binaries
+- .gitignore misses some generated files
+
+**⚡ Performance Issues**
+- Slow build times due to cached dependencies
+- File indexing taking too long
+- Visual Studio Code consuming high memory
+
+**🎯 Solution: One-Click Cleanup**
+This extension makes it effortless to clean all build artifacts across your entire workspace or specific projects, with optional automatic rebuild to ensure everything compiles correctly after cleanup.
 
 ## Requirements
 
 - Visual Studio Code 1.75.0 or higher
 - .NET SDK (optional, required only for rebuild functionality)
 
-## Installation
+## 📦 Installation
 
-Install from VS Code Extensions:
-1. Open Extensions view (`Ctrl+Shift+X`)
-2. Search for "Clean Bin and Obj" or "CleanBinAndObj"
-3. Click Install
+**Method 1: VS Code Marketplace (Recommended)**
+1. Open Visual Studio Code
+2. Press `Ctrl+Shift+X` (Windows/Linux) or `Cmd+Shift+X` (Mac)
+3. Search for "**Clean Bin Obj**" or "**CleanBinAndObj**"
+4. Click **Install**
 
-Or install from command line:
+**Method 2: Command Line**
 ```bash
 code --install-extension hybr8.clean-bin-obj
 ```
+
+**Method 3: Manual Installation**
+Download the `.vsix` file from [GitHub Releases](https://github.com/trantung95/CleanBinAndObj/releases)
 
 ## Known Issues
 
