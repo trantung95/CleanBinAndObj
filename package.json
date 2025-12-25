@@ -1,7 +1,7 @@
 {
   "name": "clean-bin-obj",
-  "displayName": "Clean Bin and Obj",
-  "description": "Clean all bin and obj directories in your workspace",
+  "displayName": "Clean Bin and Obj (CleanBinAndObj)",
+  "description": "Quickly clean all bin and obj directories in .NET projects. Remove build artifacts with one command.",
   "version": "1.0.1",
   "publisher": "hybr8",
   "homepage": "https://github.com/trantung95/CleanBinAndObj#readme",
@@ -97,8 +97,21 @@
     "clean",
     "bin",
     "obj",
+    "cleanbinandbj",
+    "clean-bin-obj",
+    "clean bin obj",
     "build",
     "dotnet",
-    "csharp"
+    "csharp",
+    "c#",
+    ".net",
+    "build-artifacts",
+    "cleanup",
+    "delete",
+    "remove",
+    "folders",
+    "visual studio",
+    "msbuild",
+    "nuget"
   ]
 }
