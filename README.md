@@ -1,5 +1,10 @@
 # Clean Bin and Obj
 
+[![Version](https://img.shields.io/visual-studio-marketplace/v/hybr8.clean-bin-obj?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=hybr8.clean-bin-obj)
+[![Installs](https://img.shields.io/visual-studio-marketplace/i/hybr8.clean-bin-obj?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=hybr8.clean-bin-obj)
+[![Rating](https://img.shields.io/visual-studio-marketplace/r/hybr8.clean-bin-obj?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=hybr8.clean-bin-obj)
+[![License](https://img.shields.io/github/license/trantung95/CleanBinAndObj?style=flat-square)](https://github.com/trantung95/CleanBinAndObj/blob/master/LICENSE)
+
 A Visual Studio Code extension for easily cleaning all `bin` and `obj` directories in your workspace. Perfect for .NET developers who want to quickly clean build artifacts and rebuild projects.
 
 ## Features
@@ -95,11 +100,31 @@ This extension makes it easy to clean these folders across your entire workspace
 ## Requirements
 
 - Visual Studio Code 1.75.0 or higher
-- No additional dependencies required
+- .NET SDK (optional, required only for rebuild functionality)
+
+## Installation
+
+Install from VS Code Extensions:
+1. Open Extensions view (`Ctrl+Shift+X`)
+2. Search for "Clean Bin and Obj" or "CleanBinAndObj"
+3. Click Install
+
+Or install from command line:
+```bash
+code --install-extension hybr8.clean-bin-obj
+```
 
 ## Known Issues
 
-None at this time. Please report issues on the [GitHub repository](https://github.com/your-repo/clean-bin-obj).
+None at this time. Please report issues on the [GitHub repository](https://github.com/trantung95/CleanBinAndObj/issues).
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request on [GitHub](https://github.com/trantung95/CleanBinAndObj).
+
+## License
+
+This extension is licensed under the [Apache-2.0 License](LICENSE).
 
 ## Release Notes
 

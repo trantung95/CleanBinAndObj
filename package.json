@@ -12,12 +12,15 @@
     "vscode": "^1.75.0"
   },
   "categories": [
+    "Programming Languages",
     "Other"
   ],
+  "icon": "icon.png",
   "galleryBanner": {
     "color": "#0078D7",
     "theme": "dark"
   },
+  "qna": "marketplace",
   "activationEvents": [],
   "main": "./extension.js",
   "contributes": {

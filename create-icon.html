@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Extension Icon</title>
+</head>
+<body>
+    <canvas id="canvas" width="128" height="128"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Background gradient
+        const gradient = ctx.createLinearGradient(0, 0, 128, 128);
+        gradient.addColorStop(0, '#0078D7');
+        gradient.addColorStop(1, '#005A9E');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 128, 128);
+        
+        // Draw trash/clean icon
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.lineWidth = 4;
+        
+        // Trash can body
+        ctx.beginPath();
+        ctx.moveTo(35, 50);
+        ctx.lineTo(30, 100);
+        ctx.lineTo(98, 100);
+        ctx.lineTo(93, 50);
+        ctx.closePath();
+        ctx.stroke();
+        
+        // Trash can lid
+        ctx.fillRect(25, 45, 78, 5);
+        
+        // Trash can handle
+        ctx.beginPath();
+        ctx.moveTo(55, 45);
+        ctx.lineTo(55, 35);
+        ctx.lineTo(73, 35);
+        ctx.lineTo(73, 45);
+        ctx.stroke();
+        
+        // Vertical lines in trash
+        ctx.beginPath();
+        ctx.moveTo(50, 60);
+        ctx.lineTo(47, 90);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(64, 60);
+        ctx.lineTo(64, 90);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(78, 60);
+        ctx.lineTo(81, 90);
+        ctx.stroke();
+        
+        // Download as PNG
+        setTimeout(() => {
+            const link = document.createElement('a');
+            link.download = 'icon.png';
+            link.href = canvas.toDataURL();
+            link.click();
+            document.body.innerHTML = '<h2>Icon downloaded! Save it as icon.png in the extension folder.</h2>';
+        }, 100);
+    </script>
+</body>
+</html>
