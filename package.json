@@ -1,0 +1,95 @@
+{
+  "name": "clean-bin-obj",
+  "displayName": "Clean Bin and Obj",
+  "description": "Clean all bin and obj directories in your workspace",
+  "version": "1.0.0",
+  "publisher": "your-publisher-name",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "cleanBinObj.clean",
+        "title": "Clean Bin and Obj Folders",
+        "category": "Build"
+      },
+      {
+        "command": "cleanBinObj.cleanWorkspace",
+        "title": "Clean Bin and Obj in Entire Workspace",
+        "category": "Build"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "cleanBinObj.clean",
+          "group": "2_workspace",
+          "when": "explorerResourceIsFolder"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "cleanBinObj.clean"
+        },
+        {
+          "command": "cleanBinObj.cleanWorkspace"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Clean Bin and Obj",
+      "properties": {
+        "cleanBinObj.targetSubdirectories": {
+          "type": "array",
+          "default": ["bin", "obj"],
+          "description": "Subdirectories to clean in project folders",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cleanBinObj.projectPatterns": {
+          "type": "array",
+          "default": ["**/*.csproj", "**/*.fsproj", "**/*.vbproj", "**/*.sln"],
+          "description": "Glob patterns to identify project files",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cleanBinObj.showOutputChannel": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show output channel when cleaning"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "pretest": "npm run lint",
+    "test": "node ./test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.75.0",
+    "@types/node": "16.x",
+    "eslint": "^8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-repo/clean-bin-obj"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "clean",
+    "bin",
+    "obj",
+    "build",
+    "dotnet",
+    "csharp"
+  ]
+}
