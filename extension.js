@@ -10,7 +10,12 @@ function activate(context) {
 
     // Command to show options and clean
     let cleanCommand = vscode.commands.registerCommand('cleanBinObj.clean', async () => {
-        const options = ['Clean Entire Workspace', 'Clean Current Project'];
+        const options = [
+            'Clean Entire Workspace',
+            'Clean Current Project',
+            'Clean & Rebuild Entire Workspace',
+            'Clean & Rebuild Current Project'
+        ];
         
         const choice = await vscode.window.showQuickPick(options, {
             placeHolder: 'Choose what to clean'
@@ -24,6 +29,10 @@ function activate(context) {
             await cleanWorkspace(outputChannel);
         } else if (choice === 'Clean Current Project') {
             await cleanCurrentProject(outputChannel);
+        } else if (choice === 'Clean & Rebuild Entire Workspace') {
+            await cleanAndRebuildWorkspace(outputChannel);
+        } else if (choice === 'Clean & Rebuild Current Project') {
+            await cleanAndRebuildCurrentProject(outputChannel);
         }
     });
 
@@ -37,9 +46,21 @@ function activate(context) {
         await cleanCurrentProject(outputChannel);
     });
 
+    // Command to clean and rebuild workspace
+    let cleanAndRebuildWorkspaceCommand = vscode.commands.registerCommand('cleanBinObj.cleanAndRebuildWorkspace', async () => {
+        await cleanAndRebuildWorkspace(outputChannel);
+    });
+
+    // Command to clean and rebuild current project
+    let cleanAndRebuildCurrentProjectCommand = vscode.commands.registerCommand('cleanBinObj.cleanAndRebuildCurrentProject', async () => {
+        await cleanAndRebuildCurrentProject(outputChannel);
+    });
+
     context.subscriptions.push(cleanCommand);
     context.subscriptions.push(cleanWorkspaceCommand);
     context.subscriptions.push(cleanCurrentProjectCommand);
+    context.subscriptions.push(cleanAndRebuildWorkspaceCommand);
+    context.subscriptions.push(cleanAndRebuildCurrentProjectCommand);
 }
 
 /**
@@ -355,6 +376,95 @@ async function deleteDirectoryRecursive(dirPath) {
 function getTimestamp() {
     const now = new Date();
     return now.toTimeString().split(' ')[0] + '.' + now.getMilliseconds().toString().padStart(3, '0');
+}
+
+/**
+ * Clean and rebuild workspace
+ */
+async function cleanAndRebuildWorkspace(outputChannel) {
+    await cleanWorkspace(outputChannel);
+    await rebuildProjects(outputChannel, true);
+}
+
+/**
+ * Clean and rebuild current project
+ */
+async function cleanAndRebuildCurrentProject(outputChannel) {
+    await cleanCurrentProject(outputChannel);
+    await rebuildProjects(outputChannel, false);
+}
+
+/**
+ * Rebuild projects using dotnet build
+ * @param {vscode.OutputChannel} outputChannel - Output channel
+ * @param {boolean} isWorkspace - Whether to build entire workspace or current project
+ */
+async function rebuildProjects(outputChannel, isWorkspace) {
+    outputChannel.appendLine(`[${getTimestamp()}] Starting rebuild...`);
+    
+    if (!vscode.workspace.workspaceFolders) {
+        vscode.window.showErrorMessage('No workspace folder opened');
+        return;
+    }
+
+    try {
+        const { exec } = require('child_process');
+        const util = require('util');
+        const execPromise = util.promisify(exec);
+
+        let buildPath;
+        if (isWorkspace) {
+            buildPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+        } else {
+            const activeEditor = vscode.window.activeTextEditor;
+            if (!activeEditor) {
+                vscode.window.showErrorMessage('No file is currently open');
+                return;
+            }
+            const currentFilePath = activeEditor.document.uri.fsPath;
+            const currentDir = path.dirname(currentFilePath);
+            const projectFile = findProjectFileInPath(currentDir, outputChannel);
+            
+            if (!projectFile) {
+                vscode.window.showErrorMessage('No project file found');
+                return;
+            }
+            buildPath = projectFile;
+        }
+
+        outputChannel.appendLine(`[${getTimestamp()}] Building: ${buildPath}`);
+        
+        await vscode.window.withProgress({
+            location: vscode.ProgressLocation.Notification,
+            title: "Rebuilding project(s)...",
+            cancellable: false
+        }, async () => {
+            try {
+                const { stdout, stderr } = await execPromise(`dotnet build "${buildPath}"`, {
+                    cwd: path.dirname(buildPath)
+                });
+                
+                if (stdout) {
+                    outputChannel.appendLine(stdout);
+                }
+                if (stderr) {
+                    outputChannel.appendLine(`[${getTimestamp()}] Warnings/Errors:`);
+                    outputChannel.appendLine(stderr);
+                }
+                
+                outputChannel.appendLine(`[${getTimestamp()}] Rebuild completed successfully`);
+                vscode.window.showInformationMessage('Rebuild completed successfully');
+            } catch (error) {
+                outputChannel.appendLine(`[${getTimestamp()}] Rebuild failed: ${error.message}`);
+                if (error.stdout) outputChannel.appendLine(error.stdout);
+                if (error.stderr) outputChannel.appendLine(error.stderr);
+                vscode.window.showErrorMessage(`Rebuild failed: ${error.message}`);
+            }
+        });
+    } catch (error) {
+        outputChannel.appendLine(`[${getTimestamp()}] Error: ${error.message}`);
+        vscode.window.showErrorMessage(`Rebuild error: ${error.message}`);
+    }
 }
 
 function deactivate() {}

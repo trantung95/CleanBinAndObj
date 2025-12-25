@@ -2,7 +2,7 @@
   "name": "clean-bin-obj",
   "displayName": "Clean Bin and Obj (CleanBinAndObj)",
   "description": "Quickly clean all bin and obj directories in .NET projects. Remove build artifacts with one command.",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "publisher": "hybr8",
   "homepage": "https://github.com/trantung95/CleanBinAndObj#readme",
   "bugs": {
@@ -36,6 +36,16 @@
         "command": "cleanBinObj.cleanCurrentProject",
         "title": "Clean Bin and Obj in Current Project",
         "category": "Build"
+      },
+      {
+        "command": "cleanBinObj.cleanAndRebuildWorkspace",
+        "title": "Clean, Rebuild Entire Workspace",
+        "category": "Build"
+      },
+      {
+        "command": "cleanBinObj.cleanAndRebuildCurrentProject",
+        "title": "Clean, Rebuild Current Project",
+        "category": "Build"
       }
     ],
     "menus": {
@@ -48,6 +58,12 @@
         },
         {
           "command": "cleanBinObj.cleanCurrentProject"
+        },
+        {
+          "command": "cleanBinObj.cleanAndRebuildWorkspace"
+        },
+        {
+          "command": "cleanBinObj.cleanAndRebuildCurrentProject"
         }
       ]
     },
@@ -101,6 +117,7 @@
     "clean-bin-obj",
     "clean bin obj",
     "build",
+    "rebuild",
     "dotnet",
     "csharp",
     "c#",

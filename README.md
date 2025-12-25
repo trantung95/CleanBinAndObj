@@ -1,27 +1,34 @@
 # Clean Bin and Obj
 
-A Visual Studio Code extension for easily cleaning all `bin` and `obj` directories in your workspace. Perfect for .NET developers who want to quickly clean build artifacts.
+A Visual Studio Code extension for easily cleaning all `bin` and `obj` directories in your workspace. Perfect for .NET developers who want to quickly clean build artifacts and rebuild projects.
 
 ## Features
 
 - 🧹 **Clean Bin and Obj folders** in your workspace with a single command
-- 🎯 **Context menu integration** - Right-click on any folder to clean it
+- 🔄 **Clean and Rebuild** - Clean build artifacts and automatically rebuild projects
+- 🎯 **Smart project detection** - Automatically finds .NET projects (.csproj, .fsproj, .vbproj, .sln)
+- ⚡ **Multiple options** - Clean entire workspace or just the current project
 - ⚙️ **Configurable** - Customize which subdirectories to clean
 - 📊 **Progress tracking** - See real-time progress and detailed output
-- 🔍 **Smart project detection** - Automatically finds .NET projects (.csproj, .fsproj, .vbproj, .sln)
 
 ## Usage
 
-### Clean Entire Workspace
+### Quick Access
 
 1. Open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
-2. Type `Clean Bin and Obj in Entire Workspace`
-3. Press Enter
+2. Type `Clean Bin and Obj`
+3. Choose from available options:
+   - **Clean Entire Workspace** - Remove bin/obj from all projects
+   - **Clean Current Project** - Remove bin/obj from current file's project
+   - **Clean & Rebuild Entire Workspace** - Clean and rebuild all projects
+   - **Clean & Rebuild Current Project** - Clean and rebuild current project
 
-### Clean Specific Folder
+### Direct Commands
 
-1. Right-click on a folder in the Explorer
-2. Select `Clean Bin and Obj Folders`
+- **Clean Bin and Obj in Entire Workspace** - Clean all projects immediately
+- **Clean Bin and Obj in Current Project** - Clean current project immediately  
+- **Clean, Rebuild Entire Workspace** - Clean and rebuild all projects
+- **Clean, Rebuild Current Project** - Clean and rebuild current project
 
 ### Keyboard Shortcut
 

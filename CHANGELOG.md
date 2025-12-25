@@ -2,6 +2,39 @@
 
 All notable changes to the "clean-bin-obj" extension will be documented in this file.
 
+## [1.1.0] - 2025-12-25
+
+### Added
+- **Clean and Rebuild** functionality - Automatically rebuild projects after cleaning
+- New commands:
+  - `Clean, Rebuild Entire Workspace` - Clean all projects and rebuild
+  - `Clean, Rebuild Current Project` - Clean current project and rebuild
+- Enhanced quick pick menu with 4 options (added rebuild variants)
+- Added "rebuild" keyword for better discoverability
+- Integration with `dotnet build` command for rebuilding
+
+### Improved
+- Better project detection using filesystem instead of VS Code API
+- Improved folder deletion with `fs.rmSync()` for reliability
+- Enhanced error handling during clean and rebuild operations
+- More detailed build output in the output channel
+
+### Changed
+- Quick pick menu now shows 4 options instead of 2
+- Updated README with new rebuild features
+
+## [1.0.2] - 2025-12-25
+
+### Added
+- Improved discoverability with additional keywords (cleanbinandbj, c#, .net, etc.)
+- Enhanced description for marketplace
+
+## [1.0.1] - 2025-12-25
+
+### Added
+- Homepage and bugs tracker links
+- Gallery banner for marketplace
+
 ## [1.0.0] - 2025-12-25
 
 ### Added
