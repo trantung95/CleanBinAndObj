@@ -1,0 +1,32 @@
+# Node modules
+node_modules/
+
+# VS Code test artifacts
+.vscode-test/
+.vscode-test-web/
+
+# Extension build artifacts
+*.vsix
+
+# Local VS Code settings (keep shared settings if needed)
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# IDE specific files
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment files
+.env
+.env.local

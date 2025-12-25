@@ -3,7 +3,7 @@
   "displayName": "Clean Bin and Obj",
   "description": "Clean all bin and obj directories in your workspace",
   "version": "1.0.0",
-  "publisher": "your-publisher-name",
+  "publisher": "trantung95",
   "engines": {
     "vscode": "^1.75.0"
   },
@@ -16,29 +16,30 @@
     "commands": [
       {
         "command": "cleanBinObj.clean",
-        "title": "Clean Bin and Obj Folders",
+        "title": "Clean Bin and Obj",
         "category": "Build"
       },
       {
         "command": "cleanBinObj.cleanWorkspace",
         "title": "Clean Bin and Obj in Entire Workspace",
         "category": "Build"
+      },
+      {
+        "command": "cleanBinObj.cleanCurrentProject",
+        "title": "Clean Bin and Obj in Current Project",
+        "category": "Build"
       }
     ],
     "menus": {
-      "explorer/context": [
-        {
-          "command": "cleanBinObj.clean",
-          "group": "2_workspace",
-          "when": "explorerResourceIsFolder"
-        }
-      ],
       "commandPalette": [
         {
           "command": "cleanBinObj.clean"
         },
         {
           "command": "cleanBinObj.cleanWorkspace"
+        },
+        {
+          "command": "cleanBinObj.cleanCurrentProject"
         }
       ]
     },
