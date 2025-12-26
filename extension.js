@@ -168,10 +168,19 @@ async function cleanCurrentProject(outputChannel) {
  */
 function findProjectFileInPath(startDir, outputChannel) {
     const extensions = ['.csproj', '.fsproj', '.vbproj', '.sln'];
-    let currentDir = startDir;
+    let currentDir = path.resolve(startDir); // Resolve to absolute path
     const maxLevelsUp = 100;
+    const visitedDirs = new Set(); // Track visited directories to prevent infinite loops
     
     for (let i = 0; i < maxLevelsUp; i++) {
+        // Prevent infinite loops from symlinks
+        const normalizedDir = path.normalize(currentDir);
+        if (visitedDirs.has(normalizedDir)) {
+            outputChannel.appendLine(`[${getTimestamp()}] Circular directory reference detected, stopping search`);
+            break;
+        }
+        visitedDirs.add(normalizedDir);
+        
         outputChannel.appendLine(`[${getTimestamp()}] Searching in: ${currentDir}`);
         
         try {
@@ -211,9 +220,15 @@ async function cleanBinAndObj(rootPaths, outputChannel) {
     const showOutput = config.get('showOutputChannel', true);
 
     // Validate targetSubdirectories for path traversal
-    const invalidDirs = targetSubdirectories.filter(dir => 
-        dir.includes('..') || dir.includes('/') || dir.includes('\\') || path.isAbsolute(dir)
-    );
+    const invalidDirs = targetSubdirectories.filter(dir => {
+        const normalized = path.normalize(dir);
+        return dir.includes('..') || 
+               dir.includes('/') || 
+               dir.includes('\\') || 
+               path.isAbsolute(dir) ||
+               normalized !== dir || // Check if normalization changed the path
+               normalized.includes(path.sep); // Check if contains any path separator after normalize
+    });
     
     if (invalidDirs.length > 0) {
         const errorMsg = `Invalid target directories detected: ${invalidDirs.join(', ')}. Only simple directory names are allowed.`;
@@ -336,7 +351,10 @@ async function cleanBinAndObj(rootPaths, outputChannel) {
 function findProjectFilesRecursive(dirPath, extensions, outputChannel, maxDepth = 20, currentDepth = 0) {
     const results = [];
     
-    if (currentDepth >= maxDepth) {
+    // Validate maxDepth to prevent stack overflow
+    const safeMaxDepth = Math.min(Math.max(1, maxDepth), 100);
+    
+    if (currentDepth >= safeMaxDepth) {
         return results;
     }
     
@@ -372,43 +390,6 @@ function findProjectFilesRecursive(dirPath, extensions, outputChannel, maxDepth 
 }
 
 /**
- * Clean a directory by removing all files and subdirectories
- * @param {string} dirPath - Directory path to clean
- * @param {vscode.OutputChannel} outputChannel - Output channel for logging
- * @returns {Promise<{filesDeleted: number, dirsDeleted: number}>}
- */
-async function cleanDirectory(dirPath, outputChannel) {
-    let filesDeleted = 0;
-    let dirsDeleted = 0;
-
-    if (!fs.existsSync(dirPath)) {
-        return { filesDeleted, dirsDeleted };
-    }
-
-    const items = fs.readdirSync(dirPath, { withFileTypes: true });
-
-    for (const item of items) {
-        const fullPath = path.join(dirPath, item.name);
-        
-        try {
-            if (item.isDirectory()) {
-                // Recursively delete directory
-                await deleteDirectoryRecursive(fullPath);
-                dirsDeleted++;
-            } else {
-                // Delete file
-                fs.unlinkSync(fullPath);
-                filesDeleted++;
-            }
-        } catch (error) {
-            outputChannel.appendLine(`[${getTimestamp()}]     Warning: Could not delete ${fullPath}: ${error.message}`);
-        }
-    }
-
-    return { filesDeleted, dirsDeleted };
-}
-
-/**
  * Recursively delete a directory
  * @param {string} dirPath - Directory path to delete
  */
@@ -419,29 +400,30 @@ async function deleteDirectoryRecursive(dirPath) {
 
     try {
         // Use fs.rmSync with recursive option (Node.js 14.14.0+)
-        fs.rmSync(dirPath, { recursive: true, force: true });
+        fs.rmSync(dirPath, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
     } catch (error) {
         // Fallback to manual deletion if rmSync fails
-        const items = fs.readdirSync(dirPath, { withFileTypes: true });
+        try {
+            const items = fs.readdirSync(dirPath, { withFileTypes: true });
 
-        for (const item of items) {
-            const fullPath = path.join(dirPath, item.name);
-            
-            if (item.isDirectory()) {
-                await deleteDirectoryRecursive(fullPath);
-            } else {
-                try {
-                    fs.unlinkSync(fullPath);
-                } catch (e) {
-                    // Ignore individual file errors
+            for (const item of items) {
+                const fullPath = path.join(dirPath, item.name);
+                
+                if (item.isDirectory()) {
+                    await deleteDirectoryRecursive(fullPath);
+                } else {
+                    try {
+                        fs.unlinkSync(fullPath);
+                    } catch (e) {
+                        // File might be in use, will be caught by outer try-catch
+                    }
                 }
             }
-        }
 
-        try {
             fs.rmdirSync(dirPath);
-        } catch (e) {
-            // Ignore final rmdir error
+        } catch (fallbackError) {
+            // Re-throw the original error with more context
+            throw new Error(`Failed to delete ${dirPath}: ${error.message} (Fallback also failed: ${fallbackError.message})`);
         }
     }
 }
@@ -529,12 +511,31 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
         await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
             title: "Rebuilding project(s)...",
-            cancellable: false
-        }, async () => {
+            cancellable: true
+        }, async (progress, token) => {
+            // Add timeout protection (15 minutes)
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Build timeout exceeded (15 minutes)')), 15 * 60 * 1000)
+            );
+            
+            const buildPromise = execPromise(`dotnet build "${buildPath}"`, {
+                cwd: path.dirname(buildPath),
+                timeout: 15 * 60 * 1000, // 15 minutes
+                maxBuffer: 10 * 1024 * 1024 // 10MB buffer for output
+            });
+            
+            // Check for cancellation
+            token.onCancellationRequested(() => {
+                outputChannel.appendLine(`[${getTimestamp()}] Build cancelled by user`);
+            });
+            
             try {
-                const { stdout, stderr } = await execPromise(`dotnet build "${buildPath}"`, {
-                    cwd: path.dirname(buildPath)
-                });
+                if (token.isCancellationRequested) {
+                    vscode.window.showWarningMessage('Build operation cancelled');
+                    return;
+                }
+                
+                const { stdout, stderr } = await Promise.race([buildPromise, timeoutPromise]);
                 
                 if (stdout) {
                     outputChannel.appendLine(stdout);
@@ -547,6 +548,10 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
                 outputChannel.appendLine(`[${getTimestamp()}] Rebuild completed successfully`);
                 vscode.window.showInformationMessage('Rebuild completed successfully');
             } catch (error) {
+                if (token.isCancellationRequested) {
+                    outputChannel.appendLine(`[${getTimestamp()}] Build cancelled`);
+                    return;
+                }
                 outputChannel.appendLine(`[${getTimestamp()}] Rebuild failed: ${error.message}`);
                 if (error.stdout) outputChannel.appendLine(error.stdout);
                 if (error.stderr) outputChannel.appendLine(error.stderr);

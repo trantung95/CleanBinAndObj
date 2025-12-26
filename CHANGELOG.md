@@ -2,6 +2,29 @@
 
 All notable changes to the "clean-bin-obj" extension will be documented in this file.
 
+## [1.5.0] - 2025-12-26
+
+### Added
+- **Timeout Protection** - Rebuild operations now have 15-minute timeout to prevent indefinite hanging
+- **Circular Reference Detection** - Prevents infinite loops from symbolic links during project search
+- **Retry Logic** - Directory deletion now retries up to 3 times with 100ms delay
+
+### Fixed
+- **Critical**: Improved path validation to detect mixed path separators (e.g., `bin/obj\test`)
+- **Critical**: Added circular directory reference detection using visited directories tracking
+- **High**: Made rebuild operation cancellable by user (was non-cancellable)
+- **High**: Added 15-minute timeout for rebuild operations
+- **Medium**: Added maxBuffer (10MB) for build output to prevent memory issues
+- **Medium**: Improved error handling - errors no longer silently swallowed in directory deletion
+- **Medium**: Added maxDepth validation (capped at 100) to prevent stack overflow
+- **Low**: Removed unused cleanDirectory function (dead code cleanup)
+
+### Changed
+- Path normalization now validates against any path separator after normalization
+- Rebuild progress indicator now shows as cancellable
+- Directory deletion failures now throw detailed error context instead of silent failure
+- findProjectFileInPath now uses Set to track visited directories
+
 ## [1.4.0] - 2025-12-26
 
 ### Added
