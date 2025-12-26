@@ -216,8 +216,23 @@ function findProjectFileInPath(startDir, outputChannel) {
 async function cleanBinAndObj(rootPaths, outputChannel) {
     const config = vscode.workspace.getConfiguration('cleanBinObj');
     const targetSubdirectories = config.get('targetSubdirectories', ['bin', 'obj']);
-    const projectPatterns = config.get('projectPatterns', ['**/*.csproj', '**/*.fsproj', '**/*.vbproj', '**/*.sln']);
     const showOutput = config.get('showOutputChannel', true);
+
+    // Validate config types
+    if (!Array.isArray(targetSubdirectories)) {
+        const errorMsg = 'Configuration error: targetSubdirectories must be an array';
+        outputChannel.appendLine(`[${getTimestamp()}] ERROR: ${errorMsg}`);
+        vscode.window.showErrorMessage(errorMsg);
+        return;
+    }
+
+    // Validate each element is a string
+    if (!targetSubdirectories.every(dir => typeof dir === 'string')) {
+        const errorMsg = 'Configuration error: All targetSubdirectories must be strings';
+        outputChannel.appendLine(`[${getTimestamp()}] ERROR: ${errorMsg}`);
+        vscode.window.showErrorMessage(errorMsg);
+        return;
+    }
 
     // Validate targetSubdirectories for path traversal
     const invalidDirs = targetSubdirectories.filter(dir => {
@@ -348,7 +363,7 @@ async function cleanBinAndObj(rootPaths, outputChannel) {
  * @param {number} currentDepth - Current recursion depth
  * @returns {string[]} - Array of found file paths
  */
-function findProjectFilesRecursive(dirPath, extensions, outputChannel, maxDepth = 20, currentDepth = 0) {
+function findProjectFilesRecursive(dirPath, extensions, outputChannel, maxDepth = 20, currentDepth = 0, visitedDirs = new Set()) {
     const results = [];
     
     // Validate maxDepth to prevent stack overflow
@@ -357,6 +372,13 @@ function findProjectFilesRecursive(dirPath, extensions, outputChannel, maxDepth 
     if (currentDepth >= safeMaxDepth) {
         return results;
     }
+    
+    // Prevent infinite loops from symlinks
+    const normalizedPath = path.normalize(path.resolve(dirPath));
+    if (visitedDirs.has(normalizedPath)) {
+        return results;
+    }
+    visitedDirs.add(normalizedPath);
     
     try {
         const items = fs.readdirSync(dirPath, { withFileTypes: true });
@@ -372,7 +394,7 @@ function findProjectFilesRecursive(dirPath, extensions, outputChannel, maxDepth 
                 }
                 
                 // Recursively search subdirectories
-                const subResults = findProjectFilesRecursive(fullPath, extensions, outputChannel, maxDepth, currentDepth + 1);
+                const subResults = findProjectFilesRecursive(fullPath, extensions, outputChannel, maxDepth, currentDepth + 1, visitedDirs);
                 results.push(...subResults);
             } else {
                 // Check if file has matching extension
@@ -514,28 +536,49 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
             cancellable: true
         }, async (progress, token) => {
             // Add timeout protection (15 minutes)
-            const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Build timeout exceeded (15 minutes)')), 15 * 60 * 1000)
-            );
-            
-            const buildPromise = execPromise(`dotnet build "${buildPath}"`, {
-                cwd: path.dirname(buildPath),
-                timeout: 15 * 60 * 1000, // 15 minutes
-                maxBuffer: 10 * 1024 * 1024 // 10MB buffer for output
+            let timeoutId;
+            const timeoutPromise = new Promise((_, reject) => {
+                timeoutId = setTimeout(() => reject(new Error('Build timeout exceeded (15 minutes)')), 15 * 60 * 1000);
             });
             
-            // Check for cancellation
+            // Start build process
+            const { exec } = require('child_process');
+            let buildProcess;
+            const buildPromise = new Promise((resolve, reject) => {
+                buildProcess = exec(`dotnet build "${buildPath}"`, {
+                    cwd: path.dirname(buildPath),
+                    timeout: 15 * 60 * 1000,
+                    maxBuffer: 10 * 1024 * 1024
+                }, (error, stdout, stderr) => {
+                    if (error) {
+                        error.stdout = stdout;
+                        error.stderr = stderr;
+                        reject(error);
+                    } else {
+                        resolve({ stdout, stderr });
+                    }
+                });
+            });
+            
+            // Handle cancellation - kill the process
             token.onCancellationRequested(() => {
-                outputChannel.appendLine(`[${getTimestamp()}] Build cancelled by user`);
+                if (buildProcess && !buildProcess.killed) {
+                    buildProcess.kill();
+                    outputChannel.appendLine(`[${getTimestamp()}] Build process terminated by user`);
+                }
             });
             
             try {
                 if (token.isCancellationRequested) {
+                    if (timeoutId) clearTimeout(timeoutId);
                     vscode.window.showWarningMessage('Build operation cancelled');
                     return;
                 }
                 
                 const { stdout, stderr } = await Promise.race([buildPromise, timeoutPromise]);
+                
+                // Clear timeout to prevent memory leak
+                if (timeoutId) clearTimeout(timeoutId);
                 
                 if (stdout) {
                     outputChannel.appendLine(stdout);
@@ -548,6 +591,9 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
                 outputChannel.appendLine(`[${getTimestamp()}] Rebuild completed successfully`);
                 vscode.window.showInformationMessage('Rebuild completed successfully');
             } catch (error) {
+                // Clear timeout on error
+                if (timeoutId) clearTimeout(timeoutId);
+                
                 if (token.isCancellationRequested) {
                     outputChannel.appendLine(`[${getTimestamp()}] Build cancelled`);
                     return;

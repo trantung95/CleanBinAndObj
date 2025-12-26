@@ -2,7 +2,7 @@
   "name": "clean-bin-obj",
   "displayName": "Clean Bin Obj - .NET Build Cleaner & Rebuild Tool",
   "description": "Instantly clean bin and obj folders in .NET C# F# VB projects. Delete build artifacts, remove temporary files, and rebuild solutions with one click. Perfect for Visual Studio Code .NET developers.",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "publisher": "hybr8",
   "homepage": "https://github.com/trantung95/CleanBinAndObj#readme",
   "bugs": {

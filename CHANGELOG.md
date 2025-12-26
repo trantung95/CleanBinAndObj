@@ -2,6 +2,27 @@
 
 All notable changes to the "clean-bin-obj" extension will be documented in this file.
 
+## [1.6.0] - 2025-12-26
+
+### Added
+- **Process Termination** - Build process now properly killed when user cancels operation
+- **Symlink Protection in Recursive Search** - Prevents infinite loops from circular symlinks
+- **Config Type Validation** - Validates that targetSubdirectories is an array of strings
+
+### Fixed
+- **Critical**: Fixed Promise.race memory leak - timeout now properly cleared after build completes
+- **Critical**: Build process now terminates when user cancels (previously kept running)
+- **Critical**: Added type validation for config - prevents crash if user sets wrong type
+- **High**: Fixed symlink infinite loop in findProjectFilesRecursive using visited Set
+- **Medium**: Removed unused projectPatterns config variable
+- **Medium**: Validates each array element is a string before processing
+
+### Changed
+- Build cancellation now kills the actual dotnet process, not just the Promise
+- Timeout ID tracked and cleared in all code paths (success, error, cancel)
+- findProjectFilesRecursive now tracks visited directories to prevent symlink loops
+- Better config validation with helpful error messages
+
 ## [1.5.0] - 2025-12-26
 
 ### Added
