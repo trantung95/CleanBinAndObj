@@ -118,7 +118,11 @@ Configure the extension through VS Code settings:
 ```json
 {
   // Subdirectories to clean in project folders
+  // Supports simple names and relative paths
   "cleanBinObj.targetSubdirectories": ["bin", "obj"],
+  
+  // You can also specify nested paths:
+  // "cleanBinObj.targetSubdirectories": ["bin/Debug", "bin/Release", "obj"],
   
   // Glob patterns to identify project files
   "cleanBinObj.projectPatterns": [
@@ -135,7 +139,10 @@ Configure the extension through VS Code settings:
 
 ### Settings Details
 
-- **`cleanBinObj.targetSubdirectories`**: Array of subdirectory names to clean (default: `["bin", "obj"]`)
+- **`cleanBinObj.targetSubdirectories`**: Array of directory names or relative paths to clean
+  - Simple names: `["bin", "obj"]` ✅
+  - Relative paths: `["bin/Debug", "packages/lib"]` ✅ (NEW in v1.8.0!)
+  - Security: Absolute paths and `..` are rejected ❌
 - **`cleanBinObj.projectPatterns`**: Glob patterns to identify project files (default: .NET project files)
 - **`cleanBinObj.showOutputChannel`**: Show the output channel with detailed logs (default: `true`)
 

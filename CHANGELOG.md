@@ -2,6 +2,28 @@
 
 All notable changes to the "clean-bin-obj" extension will be documented in this file.
 
+## [1.8.0] - 2025-12-26
+
+### Added
+- ✨ **Relative Path Support** - Now supports nested paths like `bin/Debug`, `packages/lib`
+- **More Flexible Configuration** - Clean specific subdirectories with relative paths
+- **Whitespace Trimming** - Automatically trims whitespace from config values
+
+### Changed
+- **Relaxed Validation** - Previous validation was too strict and rejected valid relative paths
+- Validation now allows: `"bin"`, `"obj"`, `"bin/Debug"`, `"bin\Release"`, `"packages/nuget"`
+- Still blocks dangerous patterns: `".."`, absolute paths like `"C:\temp"`
+
+### Fixed
+- **Critical**: Fixed overly strict validation that rejected `bin/Debug` and similar valid paths
+- User can now configure nested directories for more precise cleaning
+- Trailing slashes in config now handled correctly
+
+### Security
+- ✅ Still prevents path traversal attacks (`..`)
+- ✅ Still prevents absolute path injection
+- ✅ Validates normalized paths don't escape project directory
+
 ## [1.7.1] - 2025-12-26
 
 ### Changed

@@ -250,19 +250,30 @@ async function cleanBinAndObj(rootPaths, outputChannel) {
         return;
     }
 
-    // Validate targetSubdirectories for path traversal
+    // Validate targetSubdirectories for path traversal and absolute paths
     const invalidDirs = targetSubdirectories.filter(dir => {
-        const normalized = path.normalize(dir);
-        return dir.includes('..') || 
-               dir.includes('/') || 
-               dir.includes('\\') || 
-               path.isAbsolute(dir) ||
-               normalized !== dir || // Check if normalization changed the path
-               normalized.includes(path.sep); // Check if contains any path separator after normalize
+        // Trim whitespace
+        const trimmed = dir.trim();
+        if (trimmed.length === 0) return true; // Empty strings not allowed
+        
+        // Reject absolute paths
+        if (path.isAbsolute(trimmed)) return true;
+        
+        // Reject parent directory references
+        if (trimmed.includes('..')) return true;
+        
+        // Normalize and check it doesn't try to escape
+        const normalized = path.normalize(trimmed);
+        
+        // After normalization, path should not start with '..' or path separator
+        if (normalized.startsWith('..')) return true;
+        if (path.isAbsolute(normalized)) return true;
+        
+        return false; // Path is valid
     });
     
     if (invalidDirs.length > 0) {
-        const errorMsg = `Invalid target directories detected: ${invalidDirs.join(', ')}. Only simple directory names (like 'bin', 'obj') are allowed - no paths, slashes, or '..' allowed.`;
+        const errorMsg = `Invalid target directories detected: ${invalidDirs.join(', ')}. Paths must be relative (like 'bin', 'obj', 'bin/Debug') and cannot contain '..' or be absolute paths.`;
         outputChannel.appendLine(`[${getTimestamp()}] ERROR: ${errorMsg}`);
         vscode.window.showErrorMessage(errorMsg);
         return;
