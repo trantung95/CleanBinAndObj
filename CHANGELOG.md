@@ -2,6 +2,26 @@
 
 All notable changes to the "clean-bin-obj" extension will be documented in this file.
 
+## [1.4.0] - 2025-12-26
+
+### Added
+- **Cancellation Support** - Users can now cancel long-running clean operations
+- **Concurrent Operation Lock** - Prevents multiple clean operations running simultaneously
+- **Path Traversal Protection** - Validates config to prevent accidental deletion of parent folders
+- **Better Error Messages** - Shows specific error codes (EBUSY, EPERM) with helpful context
+
+### Fixed
+- **Memory Leak** - OutputChannel now properly disposed on extension deactivate
+- Fixed race condition when spamming clean commands
+- Better error logging with error codes and context
+- Improved error handling for locked/in-use files
+
+### Improved
+- More robust permission error handling
+- Better user feedback for file-in-use scenarios
+- Safer configuration validation
+- Enhanced stability and reliability
+
 ## [1.3.0] - 2025-12-26
 
 ### Fixed

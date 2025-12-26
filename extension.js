@@ -2,14 +2,25 @@ const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
 
+// Global lock to prevent concurrent operations
+let isOperationInProgress = false;
+
 /**
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
     const outputChannel = vscode.window.createOutputChannel('Clean Bin and Obj');
+    
+    // Dispose outputChannel when extension deactivates
+    context.subscriptions.push(outputChannel);
 
     // Command to show options and clean
     let cleanCommand = vscode.commands.registerCommand('cleanBinObj.clean', async () => {
+        if (isOperationInProgress) {
+            vscode.window.showWarningMessage('Another clean/rebuild operation is already in progress');
+            return;
+        }
+        
         const options = [
             'Clean Entire Workspace',
             'Clean Current Project',
@@ -25,35 +36,77 @@ function activate(context) {
             return; // User cancelled
         }
 
-        if (choice === 'Clean Entire Workspace') {
-            await cleanWorkspace(outputChannel);
-        } else if (choice === 'Clean Current Project') {
-            await cleanCurrentProject(outputChannel);
-        } else if (choice === 'Clean & Rebuild Entire Workspace') {
-            await cleanAndRebuildWorkspace(outputChannel);
-        } else if (choice === 'Clean & Rebuild Current Project') {
-            await cleanAndRebuildCurrentProject(outputChannel);
+        try {
+            isOperationInProgress = true;
+            
+            if (choice === 'Clean Entire Workspace') {
+                await cleanWorkspace(outputChannel);
+            } else if (choice === 'Clean Current Project') {
+                await cleanCurrentProject(outputChannel);
+            } else if (choice === 'Clean & Rebuild Entire Workspace') {
+                await cleanAndRebuildWorkspace(outputChannel);
+            } else if (choice === 'Clean & Rebuild Current Project') {
+                await cleanAndRebuildCurrentProject(outputChannel);
+            }
+        } finally {
+            isOperationInProgress = false;
         }
     });
 
     // Command to clean entire workspace directly
     let cleanWorkspaceCommand = vscode.commands.registerCommand('cleanBinObj.cleanWorkspace', async () => {
-        await cleanWorkspace(outputChannel);
+        if (isOperationInProgress) {
+            vscode.window.showWarningMessage('Another clean/rebuild operation is already in progress');
+            return;
+        }
+        try {
+            isOperationInProgress = true;
+            await cleanWorkspace(outputChannel);
+        } finally {
+            isOperationInProgress = false;
+        }
     });
 
     // Command to clean current project directly
     let cleanCurrentProjectCommand = vscode.commands.registerCommand('cleanBinObj.cleanCurrentProject', async () => {
-        await cleanCurrentProject(outputChannel);
+        if (isOperationInProgress) {
+            vscode.window.showWarningMessage('Another clean/rebuild operation is already in progress');
+            return;
+        }
+        try {
+            isOperationInProgress = true;
+            await cleanCurrentProject(outputChannel);
+        } finally {
+            isOperationInProgress = false;
+        }
     });
 
     // Command to clean and rebuild workspace
     let cleanAndRebuildWorkspaceCommand = vscode.commands.registerCommand('cleanBinObj.cleanAndRebuildWorkspace', async () => {
-        await cleanAndRebuildWorkspace(outputChannel);
+        if (isOperationInProgress) {
+            vscode.window.showWarningMessage('Another clean/rebuild operation is already in progress');
+            return;
+        }
+        try {
+            isOperationInProgress = true;
+            await cleanAndRebuildWorkspace(outputChannel);
+        } finally {
+            isOperationInProgress = false;
+        }
     });
 
     // Command to clean and rebuild current project
     let cleanAndRebuildCurrentProjectCommand = vscode.commands.registerCommand('cleanBinObj.cleanAndRebuildCurrentProject', async () => {
-        await cleanAndRebuildCurrentProject(outputChannel);
+        if (isOperationInProgress) {
+            vscode.window.showWarningMessage('Another clean/rebuild operation is already in progress');
+            return;
+        }
+        try {
+            isOperationInProgress = true;
+            await cleanAndRebuildCurrentProject(outputChannel);
+        } finally {
+            isOperationInProgress = false;
+        }
     });
 
     context.subscriptions.push(cleanCommand);
@@ -138,7 +191,7 @@ function findProjectFileInPath(startDir, outputChannel) {
             }
             currentDir = parentDir;
         } catch (error) {
-            outputChannel.appendLine(`[${getTimestamp()}] Error accessing: ${currentDir}`);
+            outputChannel.appendLine(`[${getTimestamp()}] Error accessing ${currentDir}: ${error.code || error.message}`);
             break;
         }
     }
@@ -156,6 +209,18 @@ async function cleanBinAndObj(rootPaths, outputChannel) {
     const targetSubdirectories = config.get('targetSubdirectories', ['bin', 'obj']);
     const projectPatterns = config.get('projectPatterns', ['**/*.csproj', '**/*.fsproj', '**/*.vbproj', '**/*.sln']);
     const showOutput = config.get('showOutputChannel', true);
+
+    // Validate targetSubdirectories for path traversal
+    const invalidDirs = targetSubdirectories.filter(dir => 
+        dir.includes('..') || dir.includes('/') || dir.includes('\\') || path.isAbsolute(dir)
+    );
+    
+    if (invalidDirs.length > 0) {
+        const errorMsg = `Invalid target directories detected: ${invalidDirs.join(', ')}. Only simple directory names are allowed.`;
+        outputChannel.appendLine(`[${getTimestamp()}] ERROR: ${errorMsg}`);
+        vscode.window.showErrorMessage(errorMsg);
+        return;
+    }
 
     if (showOutput) {
         outputChannel.clear();
@@ -203,9 +268,16 @@ async function cleanBinAndObj(rootPaths, outputChannel) {
         await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
             title: "Cleaning bin and obj folders",
-            cancellable: false
-        }, async (progress) => {
+            cancellable: true
+        }, async (progress, token) => {
             for (let i = 0; i < projectDirs.length; i++) {
+                // Check if user cancelled
+                if (token.isCancellationRequested) {
+                    outputChannel.appendLine(`[${getTimestamp()}] Operation cancelled by user`);
+                    vscode.window.showWarningMessage('Clean operation cancelled');
+                    return;
+                }
+                
                 const projectDir = projectDirs[i];
                 const projectName = path.basename(projectDir);
                 
@@ -227,7 +299,11 @@ async function cleanBinAndObj(rootPaths, outputChannel) {
                             outputChannel.appendLine(`[${getTimestamp()}]   - Deleted folder: ${subdir}`);
                         } catch (error) {
                             totalErrors++;
-                            outputChannel.appendLine(`[${getTimestamp()}]   - Error deleting ${dirToClean}: ${error.message}`);
+                            let errorMsg = error.message;
+                            if (error.code === 'EBUSY' || error.code === 'EPERM') {
+                                errorMsg += ' (File may be in use by another process)';
+                            }
+                            outputChannel.appendLine(`[${getTimestamp()}]   - Error deleting ${dirToClean}: ${errorMsg}`);
                         }
                     }
                 }
