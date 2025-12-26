@@ -150,13 +150,8 @@ async function cleanCurrentProject(outputChannel) {
     const currentFilePath = activeEditor.document.uri.fsPath;
     const currentDir = path.dirname(currentFilePath);
     
-    const config = vscode.workspace.getConfiguration('cleanBinObj');
-    const showOutput = config.get('showOutputChannel', true);
-    
     outputChannel.clear();
-    if (showOutput) {
-        outputChannel.show(true);
-    }
+    outputChannel.show(true);
     outputChannel.appendLine(`[${getTimestamp()}] Finding project for: ${currentFilePath}`);
     
     // Search for project file in current directory and parent directories

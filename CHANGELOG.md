@@ -2,6 +2,14 @@
 
 All notable changes to the "clean-bin-obj" extension will be documented in this file.
 
+## [1.9.1] - 2025-12-26
+
+### Changed
+- **Reverted**: Output panel now always shows during operations (v1.9.0 made it optional)
+- Rationale: Output panel provides transparency and real-time feedback - essential for good UX
+- Panel is small and non-intrusive, shows progress which helps user confidence
+- Users can see what's happening in real-time instead of just waiting
+
 ## [1.9.0] - 2025-12-26
 
 ### UX Improvements 🎨
