@@ -115,7 +115,7 @@ async function cleanCurrentProject(outputChannel) {
 function findProjectFileInPath(startDir, outputChannel) {
     const extensions = ['.csproj', '.fsproj', '.vbproj', '.sln'];
     let currentDir = startDir;
-    const maxLevelsUp = 10;
+    const maxLevelsUp = 100;
     
     for (let i = 0; i < maxLevelsUp; i++) {
         outputChannel.appendLine(`[${getTimestamp()}] Searching in: ${currentDir}`);
@@ -256,7 +256,7 @@ async function cleanBinAndObj(rootPaths, outputChannel) {
  * @param {number} currentDepth - Current recursion depth
  * @returns {string[]} - Array of found file paths
  */
-function findProjectFilesRecursive(dirPath, extensions, outputChannel, maxDepth = 5, currentDepth = 0) {
+function findProjectFilesRecursive(dirPath, extensions, outputChannel, maxDepth = 100, currentDepth = 0) {
     const results = [];
     
     if (currentDepth >= maxDepth) {
