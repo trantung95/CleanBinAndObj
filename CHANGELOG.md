@@ -2,6 +2,39 @@
 
 All notable changes to the "clean-bin-obj" extension will be documented in this file.
 
+## [1.9.0] - 2025-12-26
+
+### UX Improvements 🎨
+
+#### Fixed Major UX Issues:
+1. **✅ No More Intrusive Output Channel** - Output channel no longer auto-shows and interrupts your workflow
+   - Only shows automatically if `showOutputChannel` config is enabled
+   - On errors, shows "View Output" button instead of forcing panel open
+
+2. **✅ Reduced Log Spam** - Search logging now only logs every 10 levels instead of every directory
+   - Cleaner output channel
+   - Easier to find important information
+
+3. **✅ Actionable Error Messages** - All errors now have action buttons:
+   - "No file open" → Shows "Open File" button
+   - "No project found" → Shows "View Output" button  
+   - ".NET SDK not found" → Shows "Download .NET SDK" button (opens download page)
+   - "Rebuild failed" → Shows "View Output" button
+
+4. **✅ Better Progress Messages** - Now shows: `Cleaning MyProject.Web (3/10)` 
+   - Previously: `3/10: bin` (unclear!)
+
+5. **✅ Completion Summaries** - Smart notifications after operations:
+   - Success: `✅ Successfully cleaned 5 project(s) in 1.23s. 10 folders removed.`
+   - Errors: Shows warning with "View Output" button
+   - Rebuild: Shows time taken: `✅ Rebuild completed successfully in 45.6s`
+
+### Changed
+- Output channel respects `showOutputChannel` config for all operations
+- Error messages are more descriptive and actionable
+- Progress notifications show project names instead of folder names
+- Success messages include elapsed time and counts
+
 ## [1.8.0] - 2025-12-26
 
 ### Added

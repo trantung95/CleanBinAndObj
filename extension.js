@@ -136,22 +136,41 @@ async function cleanCurrentProject(outputChannel) {
     const activeEditor = vscode.window.activeTextEditor;
     
     if (!activeEditor) {
-        vscode.window.showErrorMessage('No file is currently open');
+        vscode.window.showErrorMessage(
+            'No file is currently open. Please open a file in your project to use this command.',
+            'Open File'
+        ).then(selection => {
+            if (selection === 'Open File') {
+                vscode.commands.executeCommand('workbench.action.files.openFile');
+            }
+        });
         return null;
     }
 
     const currentFilePath = activeEditor.document.uri.fsPath;
     const currentDir = path.dirname(currentFilePath);
     
+    const config = vscode.workspace.getConfiguration('cleanBinObj');
+    const showOutput = config.get('showOutputChannel', true);
+    
     outputChannel.clear();
-    outputChannel.show(true);
+    if (showOutput) {
+        outputChannel.show(true);
+    }
     outputChannel.appendLine(`[${getTimestamp()}] Finding project for: ${currentFilePath}`);
     
     // Search for project file in current directory and parent directories
     const projectFile = findProjectFileInPath(currentDir, outputChannel);
     
     if (!projectFile) {
-        vscode.window.showErrorMessage('No project file found for current file');
+        vscode.window.showErrorMessage(
+            'No .NET project file found for current file. Make sure you\'re in a .NET project directory.',
+            'View Output'
+        ).then(selection => {
+            if (selection === 'View Output') {
+                outputChannel.show();
+            }
+        });
         outputChannel.appendLine(`[${getTimestamp()}] No .csproj, .fsproj, .vbproj, or .sln found`);
         return null;
     }
@@ -181,7 +200,10 @@ function findProjectFileInPath(startDir, outputChannel) {
         }
         visitedDirs.add(normalizedDir);
         
-        outputChannel.appendLine(`[${getTimestamp()}] Searching in: ${currentDir}`);
+        // Only log every 10 levels to reduce spam
+        if (i === 0 || i % 10 === 0) {
+            outputChannel.appendLine(`[${getTimestamp()}] Searching in: ${currentDir}`);
+        }
         
         try {
             const files = fs.readdirSync(currentDir);
@@ -347,7 +369,7 @@ async function cleanBinAndObj(rootPaths, outputChannel) {
                 
                 progress.report({ 
                     increment: (100 / projectDirs.length),
-                    message: `${i + 1}/${projectDirs.length}: ${projectName}`
+                    message: `Cleaning ${projectName} (${i + 1}/${projectDirs.length})`
                 });
 
                 outputChannel.appendLine(`[${getTimestamp()}] Cleaning: ${projectDir}`);
@@ -378,9 +400,21 @@ async function cleanBinAndObj(rootPaths, outputChannel) {
         outputChannel.appendLine(`[${getTimestamp()}] Finished. Elapsed: ${elapsedTime}s`);
         outputChannel.appendLine(`[${getTimestamp()}] Total folders deleted: ${totalCleaned}, Errors: ${totalErrors}`);
 
-        vscode.window.showInformationMessage(
-            `Cleaned ${projectDirs.length} project(s). ${totalCleaned} folders removed. ${totalErrors} error(s).`
-        );
+        // Show summary notification
+        if (totalErrors > 0) {
+            vscode.window.showWarningMessage(
+                `Cleaned ${projectDirs.length} project(s) in ${elapsedTime}s. ${totalCleaned} folders removed, ${totalErrors} error(s). Click to view details.`,
+                'View Output'
+            ).then(selection => {
+                if (selection === 'View Output') {
+                    outputChannel.show();
+                }
+            });
+        } else {
+            vscode.window.showInformationMessage(
+                `✅ Successfully cleaned ${projectDirs.length} project(s) in ${elapsedTime}s. ${totalCleaned} folders removed.`
+            );
+        }
 
     } catch (error) {
         outputChannel.appendLine(`[${getTimestamp()}] Error: ${error.message}`);
@@ -524,6 +558,7 @@ async function cleanAndRebuildCurrentProject(outputChannel) {
  * @param {string} projectFile - Optional project file path (for current project rebuild)
  */
 async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
+    const rebuildStartTime = Date.now();
     outputChannel.appendLine(`[${getTimestamp()}] Starting rebuild...`);
     
     if (!vscode.workspace.workspaceFolders) {
@@ -540,7 +575,14 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
         try {
             await execPromise('dotnet --version');
         } catch (error) {
-            vscode.window.showErrorMessage('.NET SDK not found. Please install .NET SDK to use rebuild feature.');
+            vscode.window.showErrorMessage(
+                '.NET SDK not found. Please install .NET SDK to use rebuild feature.',
+                'Download .NET SDK'
+            ).then(selection => {
+                if (selection === 'Download .NET SDK') {
+                    vscode.env.openExternal(vscode.Uri.parse('https://dotnet.microsoft.com/download'));
+                }
+            });
             outputChannel.appendLine(`[${getTimestamp()}] .NET SDK not found`);
             return;
         }
@@ -638,8 +680,9 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
                     outputChannel.appendLine(stderr);
                 }
                 
-                outputChannel.appendLine(`[${getTimestamp()}] Rebuild completed successfully`);
-                vscode.window.showInformationMessage('Rebuild completed successfully');
+                const rebuildTime = ((Date.now() - rebuildStartTime) / 1000).toFixed(2);
+                outputChannel.appendLine(`[${getTimestamp()}] Rebuild completed successfully in ${rebuildTime}s`);
+                vscode.window.showInformationMessage(`✅ Rebuild completed successfully in ${rebuildTime}s`);
             } catch (error) {
                 // Clear timeout on error
                 if (timeoutId) clearTimeout(timeoutId);
@@ -651,7 +694,14 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
                 outputChannel.appendLine(`[${getTimestamp()}] Rebuild failed: ${error.message}`);
                 if (error.stdout) outputChannel.appendLine(error.stdout);
                 if (error.stderr) outputChannel.appendLine(error.stderr);
-                vscode.window.showErrorMessage(`Rebuild failed: ${error.message}`);
+                vscode.window.showErrorMessage(
+                    `Rebuild failed: ${error.message}`,
+                    'View Output'
+                ).then(selection => {
+                    if (selection === 'View Output') {
+                        outputChannel.show();
+                    }
+                });
             }
         });
     } catch (error) {
