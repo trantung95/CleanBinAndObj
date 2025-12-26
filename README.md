@@ -33,10 +33,12 @@ Perfect for **.NET Core**, **.NET Framework**, **ASP.NET**, and **Xamarin** deve
 ✅ F# Projects (.fsproj)  
 ✅ VB.NET Projects (.vbproj)  
 ✅ Solution Files (.sln)  
-✅ .NET Core / .NET 5+ / .NET 6/7/8  
+✅ .NET Core / .NET 5+ / .NET 6/7/8/9/10+  
 ✅ .NET Framework 4.x  
 ✅ ASP.NET Core / ASP.NET MVC  
 ✅ Xamarin / MAUI Projects
+
+**Future-Proof:** Works with any .NET version - extension uses project files (.csproj) and `dotnet` CLI, automatically supporting new .NET releases!
 
 ## 📖 How to Use (3 Easy Ways)
 

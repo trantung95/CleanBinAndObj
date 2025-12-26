@@ -2,6 +2,16 @@
 
 All notable changes to the "clean-bin-obj" extension will be documented in this file.
 
+## [1.9.2] - 2025-12-26
+
+### Changed
+- Updated documentation to explicitly mention .NET 9/10+ support
+- Clarified that extension is future-proof - automatically supports new .NET versions
+- Extension works with any .NET version because it:
+  - Uses project files (.csproj, .fsproj, .vbproj) - format unchanged across versions
+  - Uses `dotnet build` CLI - automatically detects version from project
+  - Only cleans bin/obj folders - framework-agnostic operation
+
 ## [1.9.1] - 2025-12-26
 
 ### Changed
