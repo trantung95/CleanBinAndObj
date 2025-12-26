@@ -2,6 +2,21 @@
 
 All notable changes to the "clean-bin-obj" extension will be documented in this file.
 
+## [1.3.0] - 2025-12-26
+
+### Fixed
+- **CRITICAL**: Fixed rebuild logic bug - rebuild now correctly uses cleaned project file
+- **CRITICAL**: Fixed workspace rebuild to find and build .sln files instead of just folders
+- Fixed rebuild current project not working if file was closed after clean
+- Added .NET SDK detection before attempting rebuild
+
+### Improved
+- Better rebuild logic with proper project file passing
+- Workspace rebuild now searches for .sln files for proper builds
+- Reduced scan depth from 100 to 20 levels for better performance
+- Added dotnet CLI availability check before rebuild
+- More reliable rebuild workflow
+
 ## [1.1.4] - 2025-12-26
 
 ### Added

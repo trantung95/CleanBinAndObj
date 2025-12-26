@@ -84,7 +84,7 @@ async function cleanCurrentProject(outputChannel) {
     
     if (!activeEditor) {
         vscode.window.showErrorMessage('No file is currently open');
-        return;
+        return null;
     }
 
     const currentFilePath = activeEditor.document.uri.fsPath;
@@ -100,13 +100,14 @@ async function cleanCurrentProject(outputChannel) {
     if (!projectFile) {
         vscode.window.showErrorMessage('No project file found for current file');
         outputChannel.appendLine(`[${getTimestamp()}] No .csproj, .fsproj, .vbproj, or .sln found`);
-        return;
+        return null;
     }
     
     const projectDir = path.dirname(projectFile);
     outputChannel.appendLine(`[${getTimestamp()}] Found project: ${projectFile}`);
     
     await cleanBinAndObj([projectDir], outputChannel);
+    return projectFile; // Return projectFile for rebuild
 }
 
 /**
@@ -256,7 +257,7 @@ async function cleanBinAndObj(rootPaths, outputChannel) {
  * @param {number} currentDepth - Current recursion depth
  * @returns {string[]} - Array of found file paths
  */
-function findProjectFilesRecursive(dirPath, extensions, outputChannel, maxDepth = 100, currentDepth = 0) {
+function findProjectFilesRecursive(dirPath, extensions, outputChannel, maxDepth = 20, currentDepth = 0) {
     const results = [];
     
     if (currentDepth >= maxDepth) {
@@ -390,16 +391,19 @@ async function cleanAndRebuildWorkspace(outputChannel) {
  * Clean and rebuild current project
  */
 async function cleanAndRebuildCurrentProject(outputChannel) {
-    await cleanCurrentProject(outputChannel);
-    await rebuildProjects(outputChannel, false);
+    const projectFile = await cleanCurrentProject(outputChannel);
+    if (projectFile) {
+        await rebuildProjects(outputChannel, false, projectFile);
+    }
 }
 
 /**
  * Rebuild projects using dotnet build
  * @param {vscode.OutputChannel} outputChannel - Output channel
  * @param {boolean} isWorkspace - Whether to build entire workspace or current project
+ * @param {string} projectFile - Optional project file path (for current project rebuild)
  */
-async function rebuildProjects(outputChannel, isWorkspace) {
+async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
     outputChannel.appendLine(`[${getTimestamp()}] Starting rebuild...`);
     
     if (!vscode.workspace.workspaceFolders) {
@@ -412,24 +416,36 @@ async function rebuildProjects(outputChannel, isWorkspace) {
         const util = require('util');
         const execPromise = util.promisify(exec);
 
+        // Check if dotnet is installed
+        try {
+            await execPromise('dotnet --version');
+        } catch (error) {
+            vscode.window.showErrorMessage('.NET SDK not found. Please install .NET SDK to use rebuild feature.');
+            outputChannel.appendLine(`[${getTimestamp()}] .NET SDK not found`);
+            return;
+        }
+
         let buildPath;
         if (isWorkspace) {
-            buildPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
-        } else {
-            const activeEditor = vscode.window.activeTextEditor;
-            if (!activeEditor) {
-                vscode.window.showErrorMessage('No file is currently open');
-                return;
-            }
-            const currentFilePath = activeEditor.document.uri.fsPath;
-            const currentDir = path.dirname(currentFilePath);
-            const projectFile = findProjectFileInPath(currentDir, outputChannel);
+            // Find .sln file in workspace for better build
+            const workspacePath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+            const slnFiles = findProjectFilesRecursive(workspacePath, ['.sln'], outputChannel, 10);
             
-            if (!projectFile) {
-                vscode.window.showErrorMessage('No project file found');
+            if (slnFiles.length > 0) {
+                buildPath = slnFiles[0]; // Use first .sln found
+                outputChannel.appendLine(`[${getTimestamp()}] Found solution: ${buildPath}`);
+            } else {
+                buildPath = workspacePath;
+                outputChannel.appendLine(`[${getTimestamp()}] No .sln found, building workspace folder`);
+            }
+        } else {
+            // Use projectFile passed from cleanCurrentProject
+            if (projectFile) {
+                buildPath = projectFile;
+            } else {
+                vscode.window.showErrorMessage('No project file specified for rebuild');
                 return;
             }
-            buildPath = projectFile;
         }
 
         outputChannel.appendLine(`[${getTimestamp()}] Building: ${buildPath}`);
