@@ -2,6 +2,30 @@
 
 All notable changes to the "clean-bin-obj" extension will be documented in this file.
 
+## [1.7.0] - 2025-12-26
+
+### Added
+- **Input Validation** - Validates rootPaths parameter to prevent crashes from invalid input
+- **Stack Trace Logging** - Error logs now include full stack traces for better debugging
+- **Platform-Specific Process Kill** - Uses SIGKILL on Windows, SIGTERM on Unix for reliable termination
+- **Empty Array Protection** - Validates targetSubdirectories is not empty before processing
+
+### Fixed
+- **Critical**: Removed duplicate require('child_process') - was declared twice in rebuildProjects
+- **Critical**: Fixed race condition in fs.existsSync - now handled atomically by rmSync
+- **Critical**: Fixed process kill signal - properly terminates on Windows with SIGKILL
+- **High**: Added null check for buildProcess before kill to prevent race condition
+- **High**: Validates projectDirs is not empty before cleaning
+- **Medium**: deleteDirectoryRecursive now returns boolean indicating if directory existed
+- **Medium**: Error handling now includes stack traces for debugging
+- **Low**: Fixed unused execPromise variable declaration
+
+### Changed
+- deleteDirectoryRecursive signature changed to return Promise<boolean>
+- Process termination wrapped in try-catch to handle kill errors gracefully
+- All catch blocks now log stack traces when available
+- Directory existence check removed - deletion now handled atomically
+
 ## [1.6.0] - 2025-12-26
 
 ### Added

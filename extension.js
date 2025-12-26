@@ -214,6 +214,14 @@ function findProjectFileInPath(startDir, outputChannel) {
  * @param {vscode.OutputChannel} outputChannel - Output channel for logging
  */
 async function cleanBinAndObj(rootPaths, outputChannel) {
+    // Validate rootPaths parameter
+    if (!rootPaths || !Array.isArray(rootPaths) || rootPaths.length === 0) {
+        const errorMsg = 'Invalid rootPaths: must be a non-empty array';
+        outputChannel.appendLine(`[${getTimestamp()}] ERROR: ${errorMsg}`);
+        vscode.window.showErrorMessage(errorMsg);
+        return;
+    }
+
     const config = vscode.workspace.getConfiguration('cleanBinObj');
     const targetSubdirectories = config.get('targetSubdirectories', ['bin', 'obj']);
     const showOutput = config.get('showOutputChannel', true);
@@ -221,6 +229,14 @@ async function cleanBinAndObj(rootPaths, outputChannel) {
     // Validate config types
     if (!Array.isArray(targetSubdirectories)) {
         const errorMsg = 'Configuration error: targetSubdirectories must be an array';
+        outputChannel.appendLine(`[${getTimestamp()}] ERROR: ${errorMsg}`);
+        vscode.window.showErrorMessage(errorMsg);
+        return;
+    }
+
+    // Check for empty array
+    if (targetSubdirectories.length === 0) {
+        const errorMsg = 'Configuration error: targetSubdirectories cannot be empty';
         outputChannel.appendLine(`[${getTimestamp()}] ERROR: ${errorMsg}`);
         vscode.window.showErrorMessage(errorMsg);
         return;
@@ -289,6 +305,13 @@ async function cleanBinAndObj(rootPaths, outputChannel) {
 
         // Get unique project directories
         const projectDirs = [...new Set(projectFiles.map(file => path.dirname(file)))];
+        
+        if (projectDirs.length === 0) {
+            outputChannel.appendLine(`[${getTimestamp()}] No valid project directories found`);
+            vscode.window.showInformationMessage('No valid project directories found');
+            return;
+        }
+        
         outputChannel.appendLine(`[${getTimestamp()}] Projects to clean: ${projectDirs.length}`);
 
         let totalCleaned = 0;
@@ -321,20 +344,20 @@ async function cleanBinAndObj(rootPaths, outputChannel) {
                 for (const subdir of targetSubdirectories) {
                     const dirToClean = path.join(projectDir, subdir);
                     
-                    if (fs.existsSync(dirToClean)) {
-                        try {
-                            // Delete entire folder including the folder itself
-                            await deleteDirectoryRecursive(dirToClean);
+                    try {
+                        // Delete entire folder - deleteDirectoryRecursive handles non-existent paths
+                        const existed = await deleteDirectoryRecursive(dirToClean);
+                        if (existed) {
                             totalCleaned++;
                             outputChannel.appendLine(`[${getTimestamp()}]   - Deleted folder: ${subdir}`);
-                        } catch (error) {
-                            totalErrors++;
-                            let errorMsg = error.message;
-                            if (error.code === 'EBUSY' || error.code === 'EPERM') {
-                                errorMsg += ' (File may be in use by another process)';
-                            }
-                            outputChannel.appendLine(`[${getTimestamp()}]   - Error deleting ${dirToClean}: ${errorMsg}`);
                         }
+                    } catch (error) {
+                        totalErrors++;
+                        let errorMsg = error.message;
+                        if (error.code === 'EBUSY' || error.code === 'EPERM') {
+                            errorMsg += ' (File may be in use by another process)';
+                        }
+                        outputChannel.appendLine(`[${getTimestamp()}]   - Error deleting ${dirToClean}: ${errorMsg}`);
                     }
                 }
             }
@@ -350,6 +373,9 @@ async function cleanBinAndObj(rootPaths, outputChannel) {
 
     } catch (error) {
         outputChannel.appendLine(`[${getTimestamp()}] Error: ${error.message}`);
+        if (error.stack) {
+            outputChannel.appendLine(`Stack trace: ${error.stack}`);
+        }
         vscode.window.showErrorMessage(`Error during cleanup: ${error.message}`);
     }
 }
@@ -414,15 +440,17 @@ function findProjectFilesRecursive(dirPath, extensions, outputChannel, maxDepth 
 /**
  * Recursively delete a directory
  * @param {string} dirPath - Directory path to delete
+ * @returns {Promise<boolean>} True if directory existed and was deleted, false if didn't exist
  */
 async function deleteDirectoryRecursive(dirPath) {
     if (!fs.existsSync(dirPath)) {
-        return;
+        return false;
     }
 
     try {
         // Use fs.rmSync with recursive option (Node.js 14.14.0+)
         fs.rmSync(dirPath, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
+        return true;
     } catch (error) {
         // Fallback to manual deletion if rmSync fails
         try {
@@ -443,6 +471,7 @@ async function deleteDirectoryRecursive(dirPath) {
             }
 
             fs.rmdirSync(dirPath);
+            return true;
         } catch (fallbackError) {
             // Re-throw the original error with more context
             throw new Error(`Failed to delete ${dirPath}: ${error.message} (Fallback also failed: ${fallbackError.message})`);
@@ -491,11 +520,11 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
         return;
     }
 
-    try {
-        const { exec } = require('child_process');
-        const util = require('util');
-        const execPromise = util.promisify(exec);
+    const { exec } = require('child_process');
+    const util = require('util');
+    const execPromise = util.promisify(exec);
 
+    try {
         // Check if dotnet is installed
         try {
             await execPromise('dotnet --version');
@@ -542,8 +571,7 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
             });
             
             // Start build process
-            const { exec } = require('child_process');
-            let buildProcess;
+            let buildProcess = null;
             const buildPromise = new Promise((resolve, reject) => {
                 buildProcess = exec(`dotnet build "${buildPath}"`, {
                     cwd: path.dirname(buildPath),
@@ -560,13 +588,24 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
                 });
             });
             
-            // Handle cancellation - kill the process
-            token.onCancellationRequested(() => {
+            // Handle cancellation - kill the process with SIGTERM (or SIGKILL on Windows)
+            const killProcess = () => {
                 if (buildProcess && !buildProcess.killed) {
-                    buildProcess.kill();
-                    outputChannel.appendLine(`[${getTimestamp()}] Build process terminated by user`);
+                    try {
+                        // On Windows, use taskkill for better process termination
+                        if (process.platform === 'win32') {
+                            buildProcess.kill('SIGKILL');
+                        } else {
+                            buildProcess.kill('SIGTERM');
+                        }
+                        outputChannel.appendLine(`[${getTimestamp()}] Build process terminated by user`);
+                    } catch (killError) {
+                        outputChannel.appendLine(`[${getTimestamp()}] Failed to kill process: ${killError.message}`);
+                    }
                 }
-            });
+            };
+            
+            token.onCancellationRequested(killProcess);
             
             try {
                 if (token.isCancellationRequested) {
@@ -606,6 +645,9 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
         });
     } catch (error) {
         outputChannel.appendLine(`[${getTimestamp()}] Error: ${error.message}`);
+        if (error.stack) {
+            outputChannel.appendLine(`Stack trace: ${error.stack}`);
+        }
         vscode.window.showErrorMessage(`Rebuild error: ${error.message}`);
     }
 }
