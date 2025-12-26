@@ -2,6 +2,20 @@
 
 All notable changes to the "clean-bin-obj" extension will be documented in this file.
 
+## [1.1.4] - 2025-12-26
+
+### Added
+- **Context Menu (Right-Click) Support** - Clean projects directly from Explorer and Editor
+- Right-click menu in File Explorer for quick access
+- Right-click menu in Code Editor for quick access
+- Enhanced README with 3 usage methods and examples
+- Better keyword variations for improved searchability (cleanobj, binclean, etc.)
+
+### Improved
+- More intuitive user experience with multiple access points
+- Comprehensive usage documentation with practical examples
+- SEO optimization with 43+ keywords and tags
+
 ## [1.1.0] - 2025-12-25
 
 ### Added

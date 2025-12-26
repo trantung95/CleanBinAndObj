@@ -38,33 +38,80 @@ Perfect for **.NET Core**, **.NET Framework**, **ASP.NET**, and **Xamarin** deve
 ✅ ASP.NET Core / ASP.NET MVC  
 ✅ Xamarin / MAUI Projects
 
-## Usage
+## 📖 How to Use (3 Easy Ways)
 
-### Quick Access
+### Method 1: Right-Click Menu (Fastest ⚡)
 
-1. Open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
-2. Type `Clean Bin and Obj`
-3. Choose from available options:
-   - **Clean Entire Workspace** - Remove bin/obj from all projects
-   - **Clean Current Project** - Remove bin/obj from current file's project
-   - **Clean & Rebuild Entire Workspace** - Clean and rebuild all projects
-   - **Clean & Rebuild Current Project** - Clean and rebuild current project
+**In File Explorer:**
+1. Right-click on any `.cs`, `.fs`, or `.vb` file
+2. Select **"Clean Bin and Obj in Current Project"**
+3. Done! The extension will find and clean the project automatically
 
-### Direct Commands
+**In Code Editor:**
+1. Right-click anywhere in your code file
+2. Select **"Clean Bin and Obj in Current Project"**
+3. The extension cleans the project of the current file
 
-- **Clean Bin and Obj in Entire Workspace** - Clean all projects immediately
-- **Clean Bin and Obj in Current Project** - Clean current project immediately  
-- **Clean, Rebuild Entire Workspace** - Clean and rebuild all projects
-- **Clean, Rebuild Current Project** - Clean and rebuild current project
+### Method 2: Command Palette (Most Flexible 🎯)
 
-### Keyboard Shortcut
+1. Press `Ctrl+Shift+P` (Windows/Linux) or `Cmd+Shift+P` (Mac)
+2. Type: `clean` or `bin` or `obj`
+3. Choose one of these options:
 
-You can assign a custom keyboard shortcut:
-1. Open Keyboard Shortcuts (`Ctrl+K Ctrl+S` or `Cmd+K Cmd+S`)
-2. Search for `Clean Bin and Obj`
-3. Assign your preferred shortcut
+#### Quick Pick Menu (Recommended for beginners):
+- **Clean Bin and Obj** → Shows 4 options to choose from:
+  - ✅ Clean Entire Workspace
+  - ✅ Clean Current Project
+  - ✅ Clean & Rebuild Entire Workspace
+  - ✅ Clean & Rebuild Current Project
 
-## Configuration
+#### Direct Commands (For faster access):
+- **Clean Bin and Obj in Entire Workspace** → Clean all projects now
+- **Clean Bin and Obj in Current Project** → Clean current project now
+- **Clean, Rebuild Entire Workspace** → Clean + rebuild everything
+- **Clean, Rebuild Current Project** → Clean + rebuild current file's project
+
+### Method 3: Keyboard Shortcut (Pro Users 🚀)
+
+**Setup your own shortcut:**
+1. Press `Ctrl+K Ctrl+S` (Windows/Linux) or `Cmd+K Cmd+S` (Mac)
+2. Search for: `Clean Bin and Obj`
+3. Click the `+` icon next to your preferred command
+4. Press your desired key combination (e.g., `Ctrl+Alt+C`)
+5. Done! Now use your shortcut anytime
+
+**Recommended shortcuts:**
+- `Ctrl+Alt+C` → Clean Current Project
+- `Ctrl+Alt+Shift+C` → Clean Entire Workspace
+
+## 💡 Usage Examples
+
+### Example 1: Fix Build Errors
+```
+Problem: Getting "Type already defined" errors
+Solution:
+1. Right-click in your code file
+2. Select "Clean Bin and Obj in Current Project"
+3. Build again - errors fixed! ✅
+```
+
+### Example 2: Free Up Disk Space
+```
+Before: Workspace using 2.5 GB
+Action: Run "Clean Bin and Obj in Entire Workspace"
+After: Workspace using 150 MB
+Saved: 2.35 GB! 💾
+```
+
+### Example 3: Switch Git Branches Cleanly
+```
+1. Before switching branch: Clean entire workspace
+2. Switch branch with git
+3. Run "Clean, Rebuild Entire Workspace"
+4. Fresh build on new branch! 🎉
+```
+
+## ⚙️ Configuration
 
 Configure the extension through VS Code settings:
 
