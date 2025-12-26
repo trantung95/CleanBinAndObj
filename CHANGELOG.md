@@ -2,6 +2,18 @@
 
 All notable changes to the "clean-bin-obj" extension will be documented in this file.
 
+## [1.7.1] - 2025-12-26
+
+### Changed
+- Improved error message clarity for invalid target directories
+- Error now explicitly states examples of allowed values ('bin', 'obj')
+
+### Verified
+- ✅ All validation logic working correctly for common use cases
+- ✅ Default config ['bin', 'obj'] passes all validations
+- ✅ Security checks properly reject dangerous paths
+- ✅ No bugs introduced in previous fixes
+
 ## [1.7.0] - 2025-12-26
 
 ### Added

@@ -262,7 +262,7 @@ async function cleanBinAndObj(rootPaths, outputChannel) {
     });
     
     if (invalidDirs.length > 0) {
-        const errorMsg = `Invalid target directories detected: ${invalidDirs.join(', ')}. Only simple directory names are allowed.`;
+        const errorMsg = `Invalid target directories detected: ${invalidDirs.join(', ')}. Only simple directory names (like 'bin', 'obj') are allowed - no paths, slashes, or '..' allowed.`;
         outputChannel.appendLine(`[${getTimestamp()}] ERROR: ${errorMsg}`);
         vscode.window.showErrorMessage(errorMsg);
         return;
