@@ -1,6 +1,21 @@
 # Change Log
 
 All notable changes to the "clean-bin-obj" extension will be documented in this file.
+## [2.1.1] - 2026-01-07
+
+### Added
+- **Project Name Display During Restore**: Now shows "Restoring ProjectName..." for each individual project being restored, providing better visibility of the restore process
+
+### Changed
+- Enhanced restore phase progress to show individual project names as they are being restored
+## [2.1.1] - 2026-01-07
+
+### Added
+- **Project Name Display During Restore**: Now shows "Restoring ProjectName..." for each individual project being restored, providing better visibility of the restore process
+
+### Changed
+- Enhanced restore phase progress to show individual project names as they are being restored
+
 ## [2.1.0] - 2026-01-07
 
 ### Added

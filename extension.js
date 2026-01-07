@@ -658,6 +658,14 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
                                 : 'Restoring packages...';
                             progress.report({ message: currentStep });
                         }
+                        // Detect individual project restore
+                        else if (line.match(/Restoring.*\.csproj|\.fsproj|\.vbproj/i)) {
+                            const projectName = line.match(/([^\\\/]+)\.(csproj|fsproj|vbproj)/i)?.[1] || '';
+                            if (projectName) {
+                                currentStep = `Restoring ${projectName}...`;
+                                progress.report({ message: currentStep });
+                            }
+                        }
                         // Detect restore completion
                         else if (line.includes('Restored ') || line.includes('restore completed')) {
                             currentStep = 'Packages restored ✓';
