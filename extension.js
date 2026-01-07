@@ -624,6 +624,12 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
             let totalProjects = 0;
             let currentProject = 0;
             
+            // Helper function to truncate long project names
+            const truncateProjectName = (name, maxLength = 30) => {
+                if (name.length <= maxLength) return name;
+                return '...' + name.slice(-(maxLength - 3));
+            };
+            
             // Start build process
             let buildProcess = null;
             const buildPromise = new Promise((resolve, reject) => {
@@ -662,7 +668,8 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
                         else if (line.match(/Restoring.*\.csproj|\.fsproj|\.vbproj/i)) {
                             const projectName = line.match(/([^\\\/]+)\.(csproj|fsproj|vbproj)/i)?.[1] || '';
                             if (projectName) {
-                                currentStep = `Restoring ${projectName}...`;
+                                const displayName = truncateProjectName(projectName);
+                                currentStep = `Restoring ${displayName}...`;
                                 progress.report({ message: currentStep });
                             }
                         }
@@ -681,9 +688,10 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
                             currentProject++;
                             const projectName = line.match(/([^\\\/]+)\.(csproj|fsproj|vbproj)/i)?.[1] || '';
                             if (projectName) {
+                                const displayName = truncateProjectName(projectName);
                                 currentStep = totalProjects > 0
-                                    ? `Building ${projectName} (${currentProject}/${totalProjects})...`
-                                    : `Building ${projectName}...`;
+                                    ? `Building ${displayName} (${currentProject}/${totalProjects})...`
+                                    : `Building ${displayName}...`;
                                 progress.report({ message: currentStep });
                             }
                         }

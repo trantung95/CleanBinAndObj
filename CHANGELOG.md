@@ -1,6 +1,16 @@
 # Change Log
 
 All notable changes to the "clean-bin-obj" extension will be documented in this file.
+
+## [2.1.2] - 2026-01-07
+
+### Fixed
+- **Project Name Truncation**: Long project names are now automatically truncated with "..." prefix (e.g., "...VeryLongProjectName") to prevent notification layout breaking
+- Maximum project name display length set to 30 characters for optimal readability
+
+### Changed
+- Improved progress notification stability with long project names
+
 ## [2.1.1] - 2026-01-07
 
 ### Added
