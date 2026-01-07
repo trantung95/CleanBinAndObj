@@ -621,6 +621,8 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
             // Track build progress
             let currentStep = '';
             let buildOutput = '';
+            let totalProjects = 0;
+            let currentProject = 0;
             
             // Start build process
             let buildProcess = null;
@@ -643,9 +645,17 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
                     // Parse build output for progress
                     const lines = output.split('\n');
                     for (const line of lines) {
+                        // Detect total project count
+                        const projectCountMatch = line.match(/Determining projects to restore.*?(\d+) project/i);
+                        if (projectCountMatch) {
+                            totalProjects = parseInt(projectCountMatch[1]);
+                        }
+                        
                         // Detect restore phase
                         if (line.includes('Determining projects to restore')) {
-                            currentStep = 'Restoring packages...';
+                            currentStep = totalProjects > 0 
+                                ? `Restoring packages (${totalProjects} project${totalProjects > 1 ? 's' : ''})...`
+                                : 'Restoring packages...';
                             progress.report({ message: currentStep });
                         }
                         // Detect restore completion
@@ -660,9 +670,12 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
                         }
                         // Detect project compilation
                         else if (line.match(/Building.*\.csproj|\.fsproj|\.vbproj/i)) {
+                            currentProject++;
                             const projectName = line.match(/([^\\\/]+)\.(csproj|fsproj|vbproj)/i)?.[1] || '';
                             if (projectName) {
-                                currentStep = `Building ${projectName}...`;
+                                currentStep = totalProjects > 0
+                                    ? `Building ${projectName} (${currentProject}/${totalProjects})...`
+                                    : `Building ${projectName}...`;
                                 progress.report({ message: currentStep });
                             }
                         }

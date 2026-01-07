@@ -1,7 +1,15 @@
 # Change Log
 
 All notable changes to the "clean-bin-obj" extension will be documented in this file.
+## [2.1.0] - 2026-01-07
 
+### Added
+- **Project Counter in Build Progress**: Real-time progress now shows "Building ProjectName (X/Y)..." to track which project is currently being built out of the total count
+- Automatically detects total project count from dotnet build output
+- Shows project count during restore phase: "Restoring packages (N projects)..."
+
+### Changed
+- Enhanced build progress notifications to include project numbering for better visibility in multi-project solutions
 ## [2.0.0] - 2026-01-07
 
 ### Added
