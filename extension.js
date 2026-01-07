@@ -671,8 +671,8 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
                             if (projectName) {
                                 const displayName = truncateProjectName(projectName);
                                 currentStep = totalProjects > 0
-                                    ? `${currentProject}/${totalProjects} Restoring ${displayName}...`
-                                    : `Restoring ${displayName}...`;
+                                    ? `Restoring (${currentProject}/${totalProjects}) ${displayName}`
+                                    : `Restoring ${displayName}`;
                                 progress.report({ message: currentStep });
                             }
                         }
@@ -692,8 +692,8 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
                             if (projectName) {
                                 const displayName = truncateProjectName(projectName);
                                 currentStep = totalProjects > 0
-                                    ? `${currentProject}/${totalProjects} Building ${displayName}...`
-                                    : `Building ${displayName}...`;
+                                    ? `Building (${currentProject}/${totalProjects}) ${displayName}`
+                                    : `Building ${displayName}`;
                                 progress.report({ message: currentStep });
                             }
                         }

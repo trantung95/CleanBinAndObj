@@ -2,6 +2,16 @@
 
 All notable changes to the "clean-bin-obj" extension will be documented in this file.
 
+## [2.0.1] - 2026-01-07
+
+### Changed
+- **Counter Format Improved**: Changed progress display format for better readability:
+  - Restore: `Restoring (1/5) ProjectName` (was `1/5 Restoring ProjectName...`)
+  - Build: `Building (2/5) ProjectName` (was `2/5 Building ProjectName...`)
+- Counter now appears in parentheses after the action verb for more natural reading
+- Removed trailing "..." for cleaner appearance
+- Project name truncation still active for long names (shows "...ProjectName" if >30 chars)
+
 ## [2.0.0] - 2026-01-07
 
 ### Added
