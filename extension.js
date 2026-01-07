@@ -666,10 +666,13 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
                         }
                         // Detect individual project restore
                         else if (line.match(/Restoring.*\.csproj|\.fsproj|\.vbproj/i)) {
+                            currentProject++;
                             const projectName = line.match(/([^\\\/]+)\.(csproj|fsproj|vbproj)/i)?.[1] || '';
                             if (projectName) {
                                 const displayName = truncateProjectName(projectName);
-                                currentStep = `Restoring ${displayName}...`;
+                                currentStep = totalProjects > 0
+                                    ? `${currentProject}/${totalProjects} Restoring ${displayName}...`
+                                    : `Restoring ${displayName}...`;
                                 progress.report({ message: currentStep });
                             }
                         }
@@ -685,12 +688,11 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
                         }
                         // Detect project compilation
                         else if (line.match(/Building.*\.csproj|\.fsproj|\.vbproj/i)) {
-                            currentProject++;
                             const projectName = line.match(/([^\\\/]+)\.(csproj|fsproj|vbproj)/i)?.[1] || '';
                             if (projectName) {
                                 const displayName = truncateProjectName(projectName);
                                 currentStep = totalProjects > 0
-                                    ? `Building ${displayName} (${currentProject}/${totalProjects})...`
+                                    ? `${currentProject}/${totalProjects} Building ${displayName}...`
                                     : `Building ${displayName}...`;
                                 progress.report({ message: currentStep });
                             }

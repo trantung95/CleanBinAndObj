@@ -2,61 +2,35 @@
 
 All notable changes to the "clean-bin-obj" extension will be documented in this file.
 
-## [2.1.2] - 2026-01-07
-
-### Fixed
-- **Project Name Truncation**: Long project names are now automatically truncated with "..." prefix (e.g., "...VeryLongProjectName") to prevent notification layout breaking
-- Maximum project name display length set to 30 characters for optimal readability
-
-### Changed
-- Improved progress notification stability with long project names
-
-## [2.1.1] - 2026-01-07
-
-### Added
-- **Project Name Display During Restore**: Now shows "Restoring ProjectName..." for each individual project being restored, providing better visibility of the restore process
-
-### Changed
-- Enhanced restore phase progress to show individual project names as they are being restored
-## [2.1.1] - 2026-01-07
-
-### Added
-- **Project Name Display During Restore**: Now shows "Restoring ProjectName..." for each individual project being restored, providing better visibility of the restore process
-
-### Changed
-- Enhanced restore phase progress to show individual project names as they are being restored
-
-## [2.1.0] - 2026-01-07
-
-### Added
-- **Project Counter in Build Progress**: Real-time progress now shows "Building ProjectName (X/Y)..." to track which project is currently being built out of the total count
-- Automatically detects total project count from dotnet build output
-- Shows project count during restore phase: "Restoring packages (N projects)..."
-
-### Changed
-- Enhanced build progress notifications to include project numbering for better visibility in multi-project solutions
 ## [2.0.0] - 2026-01-07
 
 ### Added
 - ✨ **Real-time Build Progress in Popup** - Now shows live build progress in notification:
-  - `Restoring packages...` → Shows during NuGet restore
+  - `Restoring packages (N projects)...` → Shows total project count during restore
+  - `X/Y Restoring ProjectName...` → Shows current project being restored with counter
   - `Packages restored ✓` → Confirmation of restore completion
   - `Compiling...` → During compilation phase
-  - `Building ProjectName...` → Shows which project is being built
+  - `X/Y Building ProjectName...` → Shows which project is being built with counter
   - `⚠️ Warning` → Shows warning codes as they occur
   - `❌ Error` → Shows error codes immediately
   - `✅ Build succeeded` → Success indicator
+- **Project Counter**: Automatically detects total project count and shows progress (e.g., "2/5 Building MyApp...")
+- **Project Name Display**: Shows individual project names during restore and build phases
+- **Smart Truncation**: Long project names (>30 chars) are truncated with "..." prefix to prevent layout breaking
 
 ### Changed
 - **Major**: Switched from `exec` to `spawn` for real-time output streaming
 - Build output now appears in Output Channel in real-time (not buffered)
 - Progress notification updates dynamically instead of static "Rebuilding..."
 - Better visibility into what's happening during long builds
+- Counter prefix format changed from "(X/Y)" suffix to "X/Y" prefix for better readability
 
 ### Improved
-- Users can see exactly what's being built without opening Output panel
+- Users can see exactly which project is being built/restored without opening Output panel
+- Progress tracking shows current project number out of total for multi-project solutions
 - Warnings and errors appear in popup immediately when they occur
 - Much better UX for multi-project solutions with long build times
+- Notification layout remains stable even with very long project names
 
 ## [1.9.2] - 2025-12-26
 
