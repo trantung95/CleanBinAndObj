@@ -2,6 +2,29 @@
 
 All notable changes to the "clean-bin-obj" extension will be documented in this file.
 
+## [2.0.0] - 2026-01-07
+
+### Added
+- ✨ **Real-time Build Progress in Popup** - Now shows live build progress in notification:
+  - `Restoring packages...` → Shows during NuGet restore
+  - `Packages restored ✓` → Confirmation of restore completion
+  - `Compiling...` → During compilation phase
+  - `Building ProjectName...` → Shows which project is being built
+  - `⚠️ Warning` → Shows warning codes as they occur
+  - `❌ Error` → Shows error codes immediately
+  - `✅ Build succeeded` → Success indicator
+
+### Changed
+- **Major**: Switched from `exec` to `spawn` for real-time output streaming
+- Build output now appears in Output Channel in real-time (not buffered)
+- Progress notification updates dynamically instead of static "Rebuilding..."
+- Better visibility into what's happening during long builds
+
+### Improved
+- Users can see exactly what's being built without opening Output panel
+- Warnings and errors appear in popup immediately when they occur
+- Much better UX for multi-project solutions with long build times
+
 ## [1.9.2] - 2025-12-26
 
 ### Changed

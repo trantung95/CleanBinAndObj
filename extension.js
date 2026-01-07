@@ -618,21 +618,97 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
                 timeoutId = setTimeout(() => reject(new Error('Build timeout exceeded (15 minutes)')), 15 * 60 * 1000);
             });
             
+            // Track build progress
+            let currentStep = '';
+            let buildOutput = '';
+            
             // Start build process
             let buildProcess = null;
             const buildPromise = new Promise((resolve, reject) => {
-                buildProcess = exec(`dotnet build "${buildPath}"`, {
+                const { spawn } = require('child_process');
+                buildProcess = spawn('dotnet', ['build', buildPath], {
                     cwd: path.dirname(buildPath),
-                    timeout: 15 * 60 * 1000,
-                    maxBuffer: 10 * 1024 * 1024
-                }, (error, stdout, stderr) => {
-                    if (error) {
+                    shell: true
+                });
+                
+                let stdout = '';
+                let stderr = '';
+                
+                // Real-time stdout processing
+                buildProcess.stdout.on('data', (data) => {
+                    const output = data.toString();
+                    stdout += output;
+                    outputChannel.append(output);
+                    
+                    // Parse build output for progress
+                    const lines = output.split('\n');
+                    for (const line of lines) {
+                        // Detect restore phase
+                        if (line.includes('Determining projects to restore')) {
+                            currentStep = 'Restoring packages...';
+                            progress.report({ message: currentStep });
+                        }
+                        // Detect restore completion
+                        else if (line.includes('Restored ') || line.includes('restore completed')) {
+                            currentStep = 'Packages restored ✓';
+                            progress.report({ message: currentStep });
+                        }
+                        // Detect compilation start
+                        else if (line.includes('Building...')) {
+                            currentStep = 'Compiling...';
+                            progress.report({ message: currentStep });
+                        }
+                        // Detect project compilation
+                        else if (line.match(/Building.*\.csproj|\.fsproj|\.vbproj/i)) {
+                            const projectName = line.match(/([^\\\/]+)\.(csproj|fsproj|vbproj)/i)?.[1] || '';
+                            if (projectName) {
+                                currentStep = `Building ${projectName}...`;
+                                progress.report({ message: currentStep });
+                            }
+                        }
+                        // Detect warnings
+                        else if (line.includes('warning ')) {
+                            const warningMatch = line.match(/warning\s+(\w+):/i);
+                            if (warningMatch) {
+                                progress.report({ message: `⚠️ ${warningMatch[1]}` });
+                            }
+                        }
+                        // Detect errors
+                        else if (line.includes('error ')) {
+                            const errorMatch = line.match(/error\s+(\w+):/i);
+                            if (errorMatch) {
+                                progress.report({ message: `❌ ${errorMatch[1]}` });
+                            }
+                        }
+                        // Detect build success
+                        else if (line.includes('Build succeeded')) {
+                            progress.report({ message: '✅ Build succeeded' });
+                        }
+                        // Detect build failure
+                        else if (line.includes('Build FAILED')) {
+                            progress.report({ message: '❌ Build failed' });
+                        }
+                    }
+                });
+                
+                buildProcess.stderr.on('data', (data) => {
+                    stderr += data.toString();
+                    outputChannel.append(data.toString());
+                });
+                
+                buildProcess.on('close', (code) => {
+                    if (code !== 0) {
+                        const error = new Error(`Build process exited with code ${code}`);
                         error.stdout = stdout;
                         error.stderr = stderr;
                         reject(error);
                     } else {
                         resolve({ stdout, stderr });
                     }
+                });
+                
+                buildProcess.on('error', (error) => {
+                    reject(error);
                 });
             });
             
@@ -666,14 +742,6 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
                 
                 // Clear timeout to prevent memory leak
                 if (timeoutId) clearTimeout(timeoutId);
-                
-                if (stdout) {
-                    outputChannel.appendLine(stdout);
-                }
-                if (stderr) {
-                    outputChannel.appendLine(`[${getTimestamp()}] Warnings/Errors:`);
-                    outputChannel.appendLine(stderr);
-                }
                 
                 const rebuildTime = ((Date.now() - rebuildStartTime) / 1000).toFixed(2);
                 outputChannel.appendLine(`[${getTimestamp()}] Rebuild completed successfully in ${rebuildTime}s`);
