@@ -2,6 +2,24 @@
 
 All notable changes to the "clean-bin-obj" extension will be documented in this file.
 
+## [2.0.3] - 2026-01-08
+
+### Fixed
+- **Progress Detection Not Working** - Fixed regex patterns not matching dotnet build output properly
+  - Counter (X/Y) now shows correctly during restore and build
+  - Project name truncation with "..." now works properly
+  - Made regex patterns more flexible to handle different output formats
+  - Added trimming of whitespace before matching to improve detection
+  - Fixed "Restored" detection to catch multiple variants ("Restored", "restore completed", "All projects are up-to-date")
+
+### Added
+- Debug logging to Output Channel showing detected projects and progress (helps troubleshooting)
+- Better handling of edge cases in dotnet build output parsing
+
+### Changed
+- Improved project name extraction from build output (now removes spaces more reliably)
+- Skip empty lines during output parsing for better performance
+
 ## [2.0.2] - 2026-01-08
 
 ### Fixed

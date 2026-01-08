@@ -651,50 +651,58 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
                     // Parse build output for progress
                     const lines = output.split('\n');
                     for (const line of lines) {
+                        const trimmedLine = line.trim();
+                        if (!trimmedLine) continue; // Skip empty lines
+                        
                         // Detect total project count
-                        const projectCountMatch = line.match(/Determining projects to restore.*?(\d+) project/i);
+                        const projectCountMatch = trimmedLine.match(/Determining projects to restore.*?(\d+) project/i);
                         if (projectCountMatch) {
                             totalProjects = parseInt(projectCountMatch[1]);
+                            outputChannel.appendLine(`[DEBUG] Detected ${totalProjects} projects`);
                         }
                         
                         // Detect restore phase
-                        if (line.includes('Determining projects to restore')) {
+                        if (trimmedLine.includes('Determining projects to restore')) {
                             currentStep = totalProjects > 0 
                                 ? `Restoring packages (${totalProjects} project${totalProjects > 1 ? 's' : ''})...`
                                 : 'Restoring packages...';
                             progress.report({ message: currentStep });
                         }
-                        // Detect individual project restore
-                        else if (line.match(/Restoring.*\.csproj|\.fsproj|\.vbproj/i)) {
+                        // Detect individual project restore - more flexible regex
+                        else if (trimmedLine.match(/Restor(ing|ed).*\.(csproj|fsproj|vbproj)/i)) {
                             currentProject++;
-                            const projectName = line.match(/([^\\\/]+)\.(csproj|fsproj|vbproj)/i)?.[1] || '';
+                            const projectNameMatch = trimmedLine.match(/([^\\\/\s]+)\.(csproj|fsproj|vbproj)/i);
+                            const projectName = projectNameMatch ? projectNameMatch[1] : '';
                             if (projectName) {
                                 const displayName = truncateProjectName(projectName);
                                 currentStep = totalProjects > 0
                                     ? `Restoring (${currentProject}/${totalProjects}) ${displayName}`
                                     : `Restoring ${displayName}`;
                                 progress.report({ message: currentStep });
+                                outputChannel.appendLine(`[DEBUG] ${currentStep}`);
                             }
                         }
                         // Detect restore completion
-                        else if (line.includes('Restored ') || line.includes('restore completed')) {
+                        else if (trimmedLine.match(/Restored|restore completed|All projects are up-to-date/i)) {
                             currentStep = 'Packages restored ✓';
                             progress.report({ message: currentStep });
                         }
                         // Detect compilation start
-                        else if (line.includes('Building...')) {
+                        else if (trimmedLine.includes('Building...')) {
                             currentStep = 'Compiling...';
                             progress.report({ message: currentStep });
                         }
-                        // Detect project compilation
-                        else if (line.match(/Building.*\.csproj|\.fsproj|\.vbproj/i)) {
-                            const projectName = line.match(/([^\\\/]+)\.(csproj|fsproj|vbproj)/i)?.[1] || '';
+                        // Detect project compilation - more flexible regex
+                        else if (trimmedLine.match(/Building.*\.(csproj|fsproj|vbproj)/i)) {
+                            const projectNameMatch = trimmedLine.match(/([^\\\/\s]+)\.(csproj|fsproj|vbproj)/i);
+                            const projectName = projectNameMatch ? projectNameMatch[1] : '';
                             if (projectName) {
                                 const displayName = truncateProjectName(projectName);
                                 currentStep = totalProjects > 0
                                     ? `Building (${currentProject}/${totalProjects}) ${displayName}`
                                     : `Building ${displayName}`;
                                 progress.report({ message: currentStep });
+                                outputChannel.appendLine(`[DEBUG] ${currentStep}`);
                             }
                         }
                         // Detect warnings
