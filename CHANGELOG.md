@@ -2,6 +2,25 @@
 
 All notable changes to the "clean-bin-obj" extension will be documented in this file.
 
+## [2.0.4] - 2026-01-08
+
+### Fixed
+- **Project Name Extraction** - Fixed regex that was stripping dots from project names
+  - Before: "Cartrack.CommsEngine.Identity" → displayed as "Identity"
+  - After: "Cartrack.CommsEngine.Identity" → displays full name (or truncated with "..." if > 30 chars)
+- **Counter Always Shows** - Now shows counter even when total project count is unknown
+  - Shows as "Restoring (2) ProjectName" if total unknown
+  - Shows as "Restoring (2/5) ProjectName" if total is known
+- **Three Dots Logic** - Truncation with "..." only happens if project name > 30 characters
+  - Short names: "MyApp" → displays as-is
+  - Long names: "VeryLongProjectNameThatExceeds30Characters" → "...Exceeds30Characters"
+
+### Clarified
+- **Warning Icon ⚠️ xUnit1051**: This shows build warning codes as they occur during compilation
+  - xUnit1051 is a specific xUnit test framework warning
+  - Format: ⚠️ followed by the warning code (CS0168, xUnit1051, etc.)
+  - Helps you see warnings immediately without opening Output panel
+
 ## [2.0.3] - 2026-01-08
 
 ### Fixed

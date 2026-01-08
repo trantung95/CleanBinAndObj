@@ -671,13 +671,15 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
                         // Detect individual project restore - more flexible regex
                         else if (trimmedLine.match(/Restor(ing|ed).*\.(csproj|fsproj|vbproj)/i)) {
                             currentProject++;
-                            const projectNameMatch = trimmedLine.match(/([^\\\/\s]+)\.(csproj|fsproj|vbproj)/i);
-                            const projectName = projectNameMatch ? projectNameMatch[1] : '';
+                            // Extract full project name including dots (e.g., Cartrack.CommsEngine.Identity)
+                            const projectNameMatch = trimmedLine.match(/([^\\\/]+)\.(csproj|fsproj|vbproj)/i);
+                            const projectName = projectNameMatch ? projectNameMatch[1].trim() : '';
                             if (projectName) {
                                 const displayName = truncateProjectName(projectName);
+                                // Always show counter if we have project count, otherwise show progress anyway
                                 currentStep = totalProjects > 0
                                     ? `Restoring (${currentProject}/${totalProjects}) ${displayName}`
-                                    : `Restoring ${displayName}`;
+                                    : `Restoring (${currentProject}) ${displayName}`;
                                 progress.report({ message: currentStep });
                                 outputChannel.appendLine(`[DEBUG] ${currentStep}`);
                             }
@@ -694,13 +696,15 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
                         }
                         // Detect project compilation - more flexible regex
                         else if (trimmedLine.match(/Building.*\.(csproj|fsproj|vbproj)/i)) {
-                            const projectNameMatch = trimmedLine.match(/([^\\\/\s]+)\.(csproj|fsproj|vbproj)/i);
-                            const projectName = projectNameMatch ? projectNameMatch[1] : '';
+                            // Extract full project name including dots (e.g., Cartrack.CommsEngine.Identity)
+                            const projectNameMatch = trimmedLine.match(/([^\\\/]+)\.(csproj|fsproj|vbproj)/i);
+                            const projectName = projectNameMatch ? projectNameMatch[1].trim() : '';
                             if (projectName) {
                                 const displayName = truncateProjectName(projectName);
+                                // Always show counter if we have project count, otherwise show progress anyway
                                 currentStep = totalProjects > 0
                                     ? `Building (${currentProject}/${totalProjects}) ${displayName}`
-                                    : `Building ${displayName}`;
+                                    : `Building (${currentProject}) ${displayName}`;
                                 progress.report({ message: currentStep });
                                 outputChannel.appendLine(`[DEBUG] ${currentStep}`);
                             }
