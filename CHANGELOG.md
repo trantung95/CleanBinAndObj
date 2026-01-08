@@ -2,6 +2,19 @@
 
 All notable changes to the "clean-bin-obj" extension will be documented in this file.
 
+## [2.0.2] - 2026-01-08
+
+### Fixed
+- **Critical: Cancellation Bug** - Fixed issue where clicking cancel button during rebuild would lock the extension
+  - Previously: After cancelling, extension showed "Another clean/rebuild operation is already in progress" and couldn't run new operations
+  - Now: Cancellation properly cleans up the operation state, allowing immediate retry
+  - Build process is now properly terminated when cancelled
+  - Added explicit process kill on cancellation to ensure cleanup
+
+### Changed
+- Improved cancellation handling to ensure operation lock (`isOperationInProgress`) is always released
+- Better logging for cancelled operations to distinguish user cancellation from errors
+
 ## [2.0.1] - 2026-01-07
 
 ### Changed

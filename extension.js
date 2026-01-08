@@ -765,6 +765,8 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
             try {
                 if (token.isCancellationRequested) {
                     if (timeoutId) clearTimeout(timeoutId);
+                    killProcess(); // Ensure process is killed
+                    outputChannel.appendLine(`[${getTimestamp()}] Build cancelled by user`);
                     vscode.window.showWarningMessage('Build operation cancelled');
                     return;
                 }
@@ -782,7 +784,9 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
                 if (timeoutId) clearTimeout(timeoutId);
                 
                 if (token.isCancellationRequested) {
-                    outputChannel.appendLine(`[${getTimestamp()}] Build cancelled`);
+                    killProcess(); // Ensure process is killed
+                    outputChannel.appendLine(`[${getTimestamp()}] Build cancelled by user`);
+                    vscode.window.showWarningMessage('Build operation cancelled');
                     return;
                 }
                 outputChannel.appendLine(`[${getTimestamp()}] Rebuild failed: ${error.message}`);
