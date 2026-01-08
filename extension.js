@@ -623,6 +623,8 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
             let buildOutput = '';
             let totalProjects = 0;
             let currentProject = 0;
+            let isRestorePhase = true; // Track which phase we're in
+            let buildProjectCounter = 0; // Separate counter for build phase
             
             // Helper function to truncate long project names
             const truncateProjectName = (name, maxLength = 30) => {
@@ -686,16 +688,20 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
                         }
                         // Detect restore completion
                         else if (trimmedLine.match(/Restored|restore completed|All projects are up-to-date/i)) {
+                            isRestorePhase = false; // Switch to build phase
+                            buildProjectCounter = 0; // Reset counter for build phase
                             currentStep = 'Packages restored ✓';
                             progress.report({ message: currentStep });
                         }
                         // Detect compilation start
                         else if (trimmedLine.includes('Building...')) {
+                            isRestorePhase = false; // Make sure we're in build phase
                             currentStep = 'Compiling...';
                             progress.report({ message: currentStep });
                         }
                         // Detect project compilation - more flexible regex
                         else if (trimmedLine.match(/Building.*\.(csproj|fsproj|vbproj)/i)) {
+                            buildProjectCounter++; // Increment build counter
                             // Extract full project name including dots (e.g., Cartrack.CommsEngine.Identity)
                             const projectNameMatch = trimmedLine.match(/([^\\\/]+)\.(csproj|fsproj|vbproj)/i);
                             const projectName = projectNameMatch ? projectNameMatch[1].trim() : '';
@@ -703,8 +709,8 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
                                 const displayName = truncateProjectName(projectName);
                                 // Always show counter if we have project count, otherwise show progress anyway
                                 currentStep = totalProjects > 0
-                                    ? `Building (${currentProject}/${totalProjects}) ${displayName}`
-                                    : `Building (${currentProject}) ${displayName}`;
+                                    ? `Building (${buildProjectCounter}/${totalProjects}) ${displayName}`
+                                    : `Building (${buildProjectCounter}) ${displayName}`;
                                 progress.report({ message: currentStep });
                                 outputChannel.appendLine(`[DEBUG] ${currentStep}`);
                             }

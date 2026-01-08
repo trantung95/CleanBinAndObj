@@ -2,6 +2,20 @@
 
 All notable changes to the "clean-bin-obj" extension will be documented in this file.
 
+## [2.0.5] - 2026-01-08
+
+### Fixed
+- **Build Progress Counter Not Showing** - Fixed issue where build phase counter wasn't incrementing
+  - Problem: Restore counter worked (1/5, 2/5...) but build counter stayed at same number
+  - Root cause: Both restore and build phases were using the same counter variable
+  - Solution: Separate counters for restore and build phases
+  - Now shows: `Restoring (1/5)` → `Restoring (2/5)` → ... → `Building (1/5)` → `Building (2/5)` → ...
+
+### Changed
+- Added phase tracking to distinguish between restore and build operations
+- Build counter resets to 0 when restore phase completes
+- Each phase now has its own independent counter for accurate progress tracking
+
 ## [2.0.4] - 2026-01-08
 
 ### Fixed
