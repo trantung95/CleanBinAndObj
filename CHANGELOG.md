@@ -2,6 +2,14 @@
 
 All notable changes to the "clean-bin-obj" extension will be documented in this file.
 
+## [2.0.6] - 2026-01-08
+
+### Changed
+- **Cleaner Notification Title** - Removed trailing "..." from progress notification title
+  - Before: "Rebuilding project(s)...: Restoring (1/5) ProjectName"
+  - After: "Rebuilding project(s): Restoring (1/5) ProjectName"
+  - Makes the notification header cleaner and less cluttered
+
 ## [2.0.5] - 2026-01-08
 
 ### Fixed

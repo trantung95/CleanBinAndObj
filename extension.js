@@ -609,7 +609,7 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
         
         await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
-            title: "Rebuilding project(s)...",
+            title: "Rebuilding project(s)",
             cancellable: true
         }, async (progress, token) => {
             // Add timeout protection (15 minutes)
