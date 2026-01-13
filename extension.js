@@ -609,7 +609,7 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
         
         await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
-            title: "Rebuilding project(s)",
+            title: "Rebuilding project(s)...",
             cancellable: true
         }, async (progress, token) => {
             // Add timeout protection (15 minutes)
@@ -618,146 +618,21 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
                 timeoutId = setTimeout(() => reject(new Error('Build timeout exceeded (15 minutes)')), 15 * 60 * 1000);
             });
             
-            // Track build progress
-            let currentStep = '';
-            let buildOutput = '';
-            let totalProjects = 0;
-            let currentProject = 0;
-            let isRestorePhase = true; // Track which phase we're in
-            let buildProjectCounter = 0; // Separate counter for build phase
-            
-            // Helper function to truncate long project names
-            const truncateProjectName = (name, maxLength = 30) => {
-                if (name.length <= maxLength) return name;
-                return '...' + name.slice(-(maxLength - 3));
-            };
-            
             // Start build process
             let buildProcess = null;
             const buildPromise = new Promise((resolve, reject) => {
-                const { spawn } = require('child_process');
-                buildProcess = spawn('dotnet', ['build', buildPath], {
+                buildProcess = exec(`dotnet build "${buildPath}"`, {
                     cwd: path.dirname(buildPath),
-                    shell: true
-                });
-                
-                let stdout = '';
-                let stderr = '';
-                
-                // Real-time stdout processing
-                buildProcess.stdout.on('data', (data) => {
-                    const output = data.toString();
-                    stdout += output;
-                    outputChannel.append(output);
-                    
-                    // Parse build output for progress
-                    const lines = output.split('\n');
-                    for (const line of lines) {
-                        const trimmedLine = line.trim();
-                        if (!trimmedLine) continue; // Skip empty lines
-                        
-                        // Detect total project count
-                        const projectCountMatch = trimmedLine.match(/Determining projects to restore.*?(\d+) project/i);
-                        if (projectCountMatch) {
-                            totalProjects = parseInt(projectCountMatch[1]);
-                            outputChannel.appendLine(`[DEBUG] Detected ${totalProjects} projects`);
-                        }
-                        
-                        // Detect restore phase
-                        if (trimmedLine.includes('Determining projects to restore')) {
-                            currentStep = totalProjects > 0 
-                                ? `Restoring packages (${totalProjects} project${totalProjects > 1 ? 's' : ''})...`
-                                : 'Restoring packages...';
-                            progress.report({ message: currentStep });
-                        }
-                        // Detect individual project restore - more flexible regex
-                        else if (trimmedLine.match(/Restor(ing|ed).*\.(csproj|fsproj|vbproj)/i)) {
-                            currentProject++;
-                            // Extract full project name including dots (e.g., Cartrack.CommsEngine.Identity)
-                            const projectNameMatch = trimmedLine.match(/([^\\\/]+)\.(csproj|fsproj|vbproj)/i);
-                            const projectName = projectNameMatch ? projectNameMatch[1].trim() : '';
-                            if (projectName) {
-                                const displayName = truncateProjectName(projectName);
-                                // Always show counter if we have project count, otherwise show progress anyway
-                                currentStep = totalProjects > 0
-                                    ? `Restoring (${currentProject}/${totalProjects}) ${displayName}`
-                                    : `Restoring (${currentProject}) ${displayName}`;
-                                progress.report({ message: currentStep });
-                                outputChannel.appendLine(`[DEBUG] ${currentStep}`);
-                            }
-                        }
-                        // Detect restore completion
-                        else if (trimmedLine.match(/Restored|restore completed|All projects are up-to-date/i)) {
-                            isRestorePhase = false; // Switch to build phase
-                            buildProjectCounter = 0; // Reset counter for build phase
-                            currentStep = 'Packages restored ✓';
-                            progress.report({ message: currentStep });
-                        }
-                        // Detect compilation start
-                        else if (trimmedLine.includes('Building...')) {
-                            isRestorePhase = false; // Make sure we're in build phase
-                            currentStep = 'Compiling...';
-                            progress.report({ message: currentStep });
-                        }
-                        // Detect project compilation - more flexible regex
-                        else if (trimmedLine.match(/Building.*\.(csproj|fsproj|vbproj)/i)) {
-                            buildProjectCounter++; // Increment build counter
-                            // Extract full project name including dots (e.g., Cartrack.CommsEngine.Identity)
-                            const projectNameMatch = trimmedLine.match(/([^\\\/]+)\.(csproj|fsproj|vbproj)/i);
-                            const projectName = projectNameMatch ? projectNameMatch[1].trim() : '';
-                            if (projectName) {
-                                const displayName = truncateProjectName(projectName);
-                                // Always show counter if we have project count, otherwise show progress anyway
-                                currentStep = totalProjects > 0
-                                    ? `Building (${buildProjectCounter}/${totalProjects}) ${displayName}`
-                                    : `Building (${buildProjectCounter}) ${displayName}`;
-                                progress.report({ message: currentStep });
-                                outputChannel.appendLine(`[DEBUG] ${currentStep}`);
-                            }
-                        }
-                        // Detect warnings
-                        else if (line.includes('warning ')) {
-                            const warningMatch = line.match(/warning\s+(\w+):/i);
-                            if (warningMatch) {
-                                progress.report({ message: `⚠️ ${warningMatch[1]}` });
-                            }
-                        }
-                        // Detect errors
-                        else if (line.includes('error ')) {
-                            const errorMatch = line.match(/error\s+(\w+):/i);
-                            if (errorMatch) {
-                                progress.report({ message: `❌ ${errorMatch[1]}` });
-                            }
-                        }
-                        // Detect build success
-                        else if (line.includes('Build succeeded')) {
-                            progress.report({ message: '✅ Build succeeded' });
-                        }
-                        // Detect build failure
-                        else if (line.includes('Build FAILED')) {
-                            progress.report({ message: '❌ Build failed' });
-                        }
-                    }
-                });
-                
-                buildProcess.stderr.on('data', (data) => {
-                    stderr += data.toString();
-                    outputChannel.append(data.toString());
-                });
-                
-                buildProcess.on('close', (code) => {
-                    if (code !== 0) {
-                        const error = new Error(`Build process exited with code ${code}`);
+                    timeout: 15 * 60 * 1000,
+                    maxBuffer: 10 * 1024 * 1024
+                }, (error, stdout, stderr) => {
+                    if (error) {
                         error.stdout = stdout;
                         error.stderr = stderr;
                         reject(error);
                     } else {
                         resolve({ stdout, stderr });
                     }
-                });
-                
-                buildProcess.on('error', (error) => {
-                    reject(error);
                 });
             });
             
@@ -783,8 +658,6 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
             try {
                 if (token.isCancellationRequested) {
                     if (timeoutId) clearTimeout(timeoutId);
-                    killProcess(); // Ensure process is killed
-                    outputChannel.appendLine(`[${getTimestamp()}] Build cancelled by user`);
                     vscode.window.showWarningMessage('Build operation cancelled');
                     return;
                 }
@@ -794,6 +667,14 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
                 // Clear timeout to prevent memory leak
                 if (timeoutId) clearTimeout(timeoutId);
                 
+                if (stdout) {
+                    outputChannel.appendLine(stdout);
+                }
+                if (stderr) {
+                    outputChannel.appendLine(`[${getTimestamp()}] Warnings/Errors:`);
+                    outputChannel.appendLine(stderr);
+                }
+                
                 const rebuildTime = ((Date.now() - rebuildStartTime) / 1000).toFixed(2);
                 outputChannel.appendLine(`[${getTimestamp()}] Rebuild completed successfully in ${rebuildTime}s`);
                 vscode.window.showInformationMessage(`✅ Rebuild completed successfully in ${rebuildTime}s`);
@@ -802,9 +683,7 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
                 if (timeoutId) clearTimeout(timeoutId);
                 
                 if (token.isCancellationRequested) {
-                    killProcess(); // Ensure process is killed
-                    outputChannel.appendLine(`[${getTimestamp()}] Build cancelled by user`);
-                    vscode.window.showWarningMessage('Build operation cancelled');
+                    outputChannel.appendLine(`[${getTimestamp()}] Build cancelled`);
                     return;
                 }
                 outputChannel.appendLine(`[${getTimestamp()}] Rebuild failed: ${error.message}`);
