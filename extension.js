@@ -1,6 +1,7 @@
 const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
+const VietnamIconRotator = require('./lib/vietnamese-food-icons');
 
 // Global lock to prevent concurrent operations
 let isOperationInProgress = false;
@@ -345,49 +346,56 @@ async function cleanBinAndObj(rootPaths, outputChannel) {
         let totalCleaned = 0;
         let totalErrors = 0;
 
-        // Progress indicator
+        // Progress indicator with Vietnamese food icons
         await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
             title: "Cleaning bin and obj folders",
             cancellable: true
         }, async (progress, token) => {
-            for (let i = 0; i < projectDirs.length; i++) {
-                // Check if user cancelled
-                if (token.isCancellationRequested) {
-                    outputChannel.appendLine(`[${getTimestamp()}] Operation cancelled by user`);
-                    vscode.window.showWarningMessage('Clean operation cancelled');
-                    return;
-                }
-                
-                const projectDir = projectDirs[i];
-                const projectName = path.basename(projectDir);
-                
-                progress.report({ 
-                    increment: (100 / projectDirs.length),
-                    message: `Cleaning ${projectName} (${i + 1}/${projectDirs.length})`
-                });
+            const iconRotator = new VietnamIconRotator(progress.report.bind(progress));
+            iconRotator.start();
 
-                outputChannel.appendLine(`[${getTimestamp()}] Cleaning: ${projectDir}`);
+            try {
+                for (let i = 0; i < projectDirs.length; i++) {
+                    // Check if user cancelled
+                    if (token.isCancellationRequested) {
+                        outputChannel.appendLine(`[${getTimestamp()}] Operation cancelled by user`);
+                        vscode.window.showWarningMessage('Clean operation cancelled');
+                        return;
+                    }
 
-                for (const subdir of targetSubdirectories) {
-                    const dirToClean = path.join(projectDir, subdir);
-                    
-                    try {
-                        // Delete entire folder - deleteDirectoryRecursive handles non-existent paths
-                        const existed = await deleteDirectoryRecursive(dirToClean);
-                        if (existed) {
-                            totalCleaned++;
-                            outputChannel.appendLine(`[${getTimestamp()}]   - Deleted folder: ${subdir}`);
+                    const projectDir = projectDirs[i];
+                    const projectName = path.basename(projectDir);
+
+                    iconRotator.report({
+                        increment: (100 / projectDirs.length),
+                        message: `Cleaning ${projectName} (${i + 1}/${projectDirs.length})`
+                    });
+
+                    outputChannel.appendLine(`[${getTimestamp()}] Cleaning: ${projectDir}`);
+
+                    for (const subdir of targetSubdirectories) {
+                        const dirToClean = path.join(projectDir, subdir);
+
+                        try {
+                            // Delete entire folder - deleteDirectoryRecursive handles non-existent paths
+                            const existed = await deleteDirectoryRecursive(dirToClean);
+                            if (existed) {
+                                totalCleaned++;
+                                outputChannel.appendLine(`[${getTimestamp()}]   - Deleted folder: ${subdir}`);
+                            }
+                        } catch (error) {
+                            totalErrors++;
+                            let errorMsg = error.message;
+                            if (error.code === 'EBUSY' || error.code === 'EPERM') {
+                                errorMsg += ' (File may be in use by another process)';
+                            }
+                            outputChannel.appendLine(`[${getTimestamp()}]   - Error deleting ${dirToClean}: ${errorMsg}`);
                         }
-                    } catch (error) {
-                        totalErrors++;
-                        let errorMsg = error.message;
-                        if (error.code === 'EBUSY' || error.code === 'EPERM') {
-                            errorMsg += ' (File may be in use by another process)';
-                        }
-                        outputChannel.appendLine(`[${getTimestamp()}]   - Error deleting ${dirToClean}: ${errorMsg}`);
                     }
                 }
+            } finally {
+                iconRotator.stop();
             }
         });
 
@@ -632,31 +640,37 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
             progressTitle = "Rebuilding project";
         }
 
+        // Progress indicator with Vietnamese food icons
         await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
             title: progressTitle,
             cancellable: true
         }, async (progress, token) => {
+            const iconRotator = new VietnamIconRotator(progress.report.bind(progress));
+            iconRotator.start();
+
             return new Promise((resolve, reject) => {
                 // Create process manager with pre-counted projects
                 const processManager = new BuildProcessManager(
                     buildPath,
                     outputChannel,
-                    // onProgress callback
+                    // onProgress callback - use iconRotator for Vietnamese food icons
                     ({ message, increment }) => {
-                        progress.report({
+                        iconRotator.report({
                             message: message,
                             increment: increment
                         });
                     },
                     // onComplete callback
                     ({ elapsed }) => {
+                        iconRotator.stop();
                         outputChannel.appendLine(`[${getTimestamp()}] Rebuild completed successfully in ${elapsed}s`);
                         vscode.window.showInformationMessage(`✅ Rebuild completed successfully in ${elapsed}s`);
                         resolve();
                     },
                     // onError callback
                     ({ message, cancelled, elapsed }) => {
+                        iconRotator.stop();
                         if (cancelled) {
                             outputChannel.appendLine(`[${getTimestamp()}] Build cancelled`);
                             vscode.window.showWarningMessage('Build operation cancelled');
@@ -687,6 +701,7 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
                 try {
                     processManager.start(token);
                 } catch (error) {
+                    iconRotator.stop();
                     outputChannel.appendLine(`[${getTimestamp()}] Failed to start build: ${error.message}`);
                     reject(error);
                 }
