@@ -553,9 +553,9 @@ async function cleanAndRebuildCurrentProject(outputChannel) {
  * @param {string} projectFile - Optional project file path (for current project rebuild)
  */
 async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
-    const rebuildStartTime = Date.now();
+    const BuildProcessManager = require('./lib/build-process-manager');
     outputChannel.appendLine(`[${getTimestamp()}] Starting rebuild...`);
-    
+
     if (!vscode.workspace.workspaceFolders) {
         vscode.window.showErrorMessage('No workspace folder opened');
         return;
@@ -587,7 +587,7 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
             // Find .sln file in workspace for better build
             const workspacePath = vscode.workspace.workspaceFolders[0].uri.fsPath;
             const slnFiles = findProjectFilesRecursive(workspacePath, ['.sln'], outputChannel, 10);
-            
+
             if (slnFiles.length > 0) {
                 buildPath = slnFiles[0]; // Use first .sln found
                 outputChannel.appendLine(`[${getTimestamp()}] Found solution: ${buildPath}`);
@@ -606,98 +606,91 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
         }
 
         outputChannel.appendLine(`[${getTimestamp()}] Building: ${buildPath}`);
-        
+
+        // Pre-count projects for progress tracking
+        let totalProjects = 1; // Default to 1
+        let showCounter = true; // Show counter by default
+        let progressTitle = "Rebuilding project(s)";
+        let staticProjectName = null; // For single project rebuild
+
+        if (isWorkspace || buildPath.endsWith('.sln')) {
+            const projectFiles = findProjectFilesRecursive(
+                path.dirname(buildPath),
+                ['.csproj', '.fsproj', '.vbproj'],
+                outputChannel,
+                50
+            );
+            totalProjects = projectFiles.length;
+            outputChannel.appendLine(`[${getTimestamp()}] Found ${totalProjects} project(s) to build`);
+        } else {
+            // Single project rebuild - show only selected project name
+            showCounter = false;
+            const projectName = path.basename(buildPath, path.extname(buildPath));
+            staticProjectName = projectName.length > 30
+                ? '...' + projectName.slice(-27)
+                : projectName;
+            progressTitle = "Rebuilding project";
+        }
+
         await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
-            title: "Rebuilding project(s)...",
+            title: progressTitle,
             cancellable: true
         }, async (progress, token) => {
-            // Add timeout protection (15 minutes)
-            let timeoutId;
-            const timeoutPromise = new Promise((_, reject) => {
-                timeoutId = setTimeout(() => reject(new Error('Build timeout exceeded (15 minutes)')), 15 * 60 * 1000);
-            });
-            
-            // Start build process
-            let buildProcess = null;
-            const buildPromise = new Promise((resolve, reject) => {
-                buildProcess = exec(`dotnet build "${buildPath}"`, {
-                    cwd: path.dirname(buildPath),
-                    timeout: 15 * 60 * 1000,
-                    maxBuffer: 10 * 1024 * 1024
-                }, (error, stdout, stderr) => {
-                    if (error) {
-                        error.stdout = stdout;
-                        error.stderr = stderr;
-                        reject(error);
-                    } else {
-                        resolve({ stdout, stderr });
-                    }
-                });
-            });
-            
-            // Handle cancellation - kill the process with SIGTERM (or SIGKILL on Windows)
-            const killProcess = () => {
-                if (buildProcess && !buildProcess.killed) {
-                    try {
-                        // On Windows, use taskkill for better process termination
-                        if (process.platform === 'win32') {
-                            buildProcess.kill('SIGKILL');
+            return new Promise((resolve, reject) => {
+                // Create process manager with pre-counted projects
+                const processManager = new BuildProcessManager(
+                    buildPath,
+                    outputChannel,
+                    // onProgress callback
+                    ({ message, increment }) => {
+                        progress.report({
+                            message: message,
+                            increment: increment
+                        });
+                    },
+                    // onComplete callback
+                    ({ elapsed }) => {
+                        outputChannel.appendLine(`[${getTimestamp()}] Rebuild completed successfully in ${elapsed}s`);
+                        vscode.window.showInformationMessage(`✅ Rebuild completed successfully in ${elapsed}s`);
+                        resolve();
+                    },
+                    // onError callback
+                    ({ message, cancelled, elapsed }) => {
+                        if (cancelled) {
+                            outputChannel.appendLine(`[${getTimestamp()}] Build cancelled`);
+                            vscode.window.showWarningMessage('Build operation cancelled');
+                            resolve(); // Resolve, not reject, for cancellation
                         } else {
-                            buildProcess.kill('SIGTERM');
+                            outputChannel.appendLine(`[${getTimestamp()}] Rebuild failed: ${message}`);
+                            if (elapsed) {
+                                outputChannel.appendLine(`[${getTimestamp()}] Build ran for ${elapsed}s before failing`);
+                            }
+                            vscode.window.showErrorMessage(
+                                `Rebuild failed: ${message}`,
+                                'View Output'
+                            ).then(selection => {
+                                if (selection === 'View Output') {
+                                    outputChannel.show();
+                                }
+                            });
+                            reject(new Error(message));
                         }
-                        outputChannel.appendLine(`[${getTimestamp()}] Build process terminated by user`);
-                    } catch (killError) {
-                        outputChannel.appendLine(`[${getTimestamp()}] Failed to kill process: ${killError.message}`);
-                    }
+                    },
+                    // Total projects count, showCounter flag, and static project name
+                    totalProjects,
+                    showCounter,
+                    staticProjectName
+                );
+
+                // Start the build process
+                try {
+                    processManager.start(token);
+                } catch (error) {
+                    outputChannel.appendLine(`[${getTimestamp()}] Failed to start build: ${error.message}`);
+                    reject(error);
                 }
-            };
-            
-            token.onCancellationRequested(killProcess);
-            
-            try {
-                if (token.isCancellationRequested) {
-                    if (timeoutId) clearTimeout(timeoutId);
-                    vscode.window.showWarningMessage('Build operation cancelled');
-                    return;
-                }
-                
-                const { stdout, stderr } = await Promise.race([buildPromise, timeoutPromise]);
-                
-                // Clear timeout to prevent memory leak
-                if (timeoutId) clearTimeout(timeoutId);
-                
-                if (stdout) {
-                    outputChannel.appendLine(stdout);
-                }
-                if (stderr) {
-                    outputChannel.appendLine(`[${getTimestamp()}] Warnings/Errors:`);
-                    outputChannel.appendLine(stderr);
-                }
-                
-                const rebuildTime = ((Date.now() - rebuildStartTime) / 1000).toFixed(2);
-                outputChannel.appendLine(`[${getTimestamp()}] Rebuild completed successfully in ${rebuildTime}s`);
-                vscode.window.showInformationMessage(`✅ Rebuild completed successfully in ${rebuildTime}s`);
-            } catch (error) {
-                // Clear timeout on error
-                if (timeoutId) clearTimeout(timeoutId);
-                
-                if (token.isCancellationRequested) {
-                    outputChannel.appendLine(`[${getTimestamp()}] Build cancelled`);
-                    return;
-                }
-                outputChannel.appendLine(`[${getTimestamp()}] Rebuild failed: ${error.message}`);
-                if (error.stdout) outputChannel.appendLine(error.stdout);
-                if (error.stderr) outputChannel.appendLine(error.stderr);
-                vscode.window.showErrorMessage(
-                    `Rebuild failed: ${error.message}`,
-                    'View Output'
-                ).then(selection => {
-                    if (selection === 'View Output') {
-                        outputChannel.show();
-                    }
-                });
-            }
+            });
         });
     } catch (error) {
         outputChannel.appendLine(`[${getTimestamp()}] Error: ${error.message}`);
