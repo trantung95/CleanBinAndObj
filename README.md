@@ -38,6 +38,7 @@ If this extension saves you time and disk space, consider supporting its develop
 - 🔍 **Auto-Detection** - Finds .csproj, .fsproj, .vbproj, and .sln files automatically
 - ⚙️ **Fully Configurable** - Customize target directories and patterns
 - 📊 **Real-time Progress** - Visual progress tracking with detailed output logs
+- 🇻🇳 **Vietnam Cultural Icons** - Rotating Vietnamese icons during progress (introduce Vietnam to the world!)
 - 💪 **Production Ready** - Battle-tested with large .NET solutions
 - 🚀 **Lightning Fast** - Optimized for performance on big codebases
 
@@ -240,6 +241,13 @@ Contributions are welcome! Please feel free to submit a Pull Request on [GitHub]
 This extension is licensed under the [Apache-2.0 License](LICENSE).
 
 ## Release Notes
+
+### 2.1.0
+
+- 🇻🇳 **Vietnam Cultural Icons** - Rotating Vietnamese icons during clean/rebuild progress
+  - 80+ icons representing Vietnamese culture: national symbols, food, animals, fruits, landmarks
+  - Icons rotate randomly every 1-3 seconds (configurable)
+  - Introduce Vietnam to the world! 🍜🥖☕🐃🪷
 
 ### 1.0.0
 
