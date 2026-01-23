@@ -17,19 +17,6 @@ Perfect for **.NET Core**, **.NET Framework**, **ASP.NET**, and **Xamarin** deve
 - 🔀 **Switch Git branches** cleanly without build conflicts
 - ⚡ **Boost productivity** with one-click workspace cleanup
 
-## 🥖 Send me a Bánh Mì
-
-If this extension saves you time and disk space, consider supporting its development! Your support helps keep this project maintained and improved.
-
-**Crypto Wallet:**
-```
-[Coming Soon]
-```
-
-*Every contribution, no matter how small, is greatly appreciated and motivates continued development!*
-
----
-
 ## 🎯 Features
 
 - 🧹 **Instant Cleanup** - Delete all bin and obj folders with one command
@@ -272,3 +259,17 @@ Inspired by the [Clean Bin and Obj](https://marketplace.visualstudio.com/items?i
 ---
 
 **Enjoy cleaning! 🧹**
+
+---
+
+<div align="center">
+
+### 🥖 Send me a Bánh Mì
+
+<sub>If this extension saved you time, you could send me a Vietnamese sandwich! 🇻🇳</sub>
+
+**Crypto wallet**: *Coming soon* ☕
+
+<sub>🪷 Made with cà phê sữa đá in Vietnam 🍜</sub>
+
+</div>

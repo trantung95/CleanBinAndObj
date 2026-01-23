@@ -110,11 +110,25 @@ function activate(context) {
         }
     });
 
+    // Easter Egg: Send me a Bánh Mì 🥖 - Animated cooking experience with themed webview!
+    let banhMiCommand = vscode.commands.registerCommand('cleanBinObj.banhMi', async () => {
+        // Create webview panel with VS Code theme support
+        const panel = vscode.window.createWebviewPanel(
+            'banhMiEasterEgg',
+            '🥖 Bánh Mì',
+            vscode.ViewColumn.One,
+            { enableScripts: true }
+        );
+
+        panel.webview.html = getBanhMiWebviewContent();
+    });
+
     context.subscriptions.push(cleanCommand);
     context.subscriptions.push(cleanWorkspaceCommand);
     context.subscriptions.push(cleanCurrentProjectCommand);
     context.subscriptions.push(cleanAndRebuildWorkspaceCommand);
     context.subscriptions.push(cleanAndRebuildCurrentProjectCommand);
+    context.subscriptions.push(banhMiCommand);
 }
 
 /**
@@ -717,6 +731,260 @@ async function rebuildProjects(outputChannel, isWorkspace, projectFile = null) {
 }
 
 function deactivate() {}
+
+/**
+ * Generate Bánh Mì Easter Egg webview content with VS Code theme support
+ */
+function getBanhMiWebviewContent() {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🥖 Bánh Mì</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: var(--vscode-font-family);
+            background-color: var(--vscode-editor-background);
+            color: var(--vscode-editor-foreground);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+            max-width: 500px;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: var(--vscode-textLink-foreground);
+        }
+        .subtitle {
+            font-size: 1.1em;
+            color: var(--vscode-descriptionForeground);
+            margin-bottom: 30px;
+        }
+        .cooking-container {
+            background: var(--vscode-input-background);
+            border: 1px solid var(--vscode-input-border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .step-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+            animation: bounce 0.5s ease infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .step-text {
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+        .step-text-en {
+            font-size: 0.95em;
+            color: var(--vscode-descriptionForeground);
+            font-style: italic;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--vscode-progressBar-background);
+            border-radius: 4px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--vscode-progressBar-background);
+            background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb, #1dd1a1);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        .banh-mi-art {
+            font-size: 1.5em;
+            line-height: 1.4;
+            margin: 20px 0;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.5s ease;
+        }
+        .banh-mi-art.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .message-box {
+            background: var(--vscode-input-background);
+            border: 1px solid var(--vscode-input-border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+        .message-box.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .message-box h2 {
+            color: var(--vscode-textLink-foreground);
+            margin-bottom: 10px;
+        }
+        .message-box p {
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+        .crypto-wallet {
+            background: var(--vscode-textBlockQuote-background);
+            border-left: 3px solid var(--vscode-textLink-foreground);
+            padding: 10px 15px;
+            margin: 15px 0;
+            font-family: var(--vscode-editor-font-family);
+        }
+        .extension-name {
+            background: linear-gradient(135deg, var(--vscode-button-background), var(--vscode-button-hoverBackground));
+            color: var(--vscode-button-foreground);
+            padding: 12px 20px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-size: 1.05em;
+        }
+        .footer {
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: var(--vscode-descriptionForeground);
+        }
+        .flag {
+            display: inline-block;
+            animation: wave 1s ease-in-out infinite;
+        }
+        @keyframes wave {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+        .hidden {
+            display: none;
+        }
+        .celebration {
+            font-size: 2em;
+            animation: celebrate 0.5s ease infinite;
+        }
+        @keyframes celebrate {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.1) rotate(-5deg); }
+            75% { transform: scale(1.1) rotate(5deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🥖 Bánh Mì</h1>
+        <p class="subtitle">Vietnamese Sandwich Experience</p>
+
+        <div class="cooking-container" id="cookingContainer">
+            <div class="step-icon" id="stepIcon">🛒</div>
+            <div class="step-text" id="stepText">Đi chợ...</div>
+            <div class="step-text-en" id="stepTextEn">Going to market...</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div class="banh-mi-art" id="banhMiArt">
+            <div>🥖🥖🥖🥖🥖🥖🥖</div>
+            <div>┌─────────────┐</div>
+            <div>│ 🥩🥒🥕🌿🧈 │</div>
+            <div>└─────────────┘</div>
+            <div>🥖🥖🥖🥖🥖🥖🥖</div>
+        </div>
+
+        <div class="message-box" id="messageBox">
+            <div class="celebration" id="celebration">🎉</div>
+            <h2>Your Bánh Mì is ready! <span class="flag">🇻🇳</span></h2>
+            <p>If this extension saved you time,<br>consider sending me a Vietnamese sandwich!</p>
+            <div class="crypto-wallet">
+                ☕ <strong>Crypto wallet:</strong> Coming soon...
+            </div>
+            <div class="extension-name">
+                🧹 <strong>Clean Bin Obj</strong> - .NET Build Cleaner & Rebuild Tool
+            </div>
+            <p class="footer">🪷 Made with cà phê sữa đá in Vietnam 🍜</p>
+        </div>
+    </div>
+
+    <script>
+        const cookingSteps = [
+            { icon: '🛒', vn: 'Đi chợ...', en: 'Going to market...' },
+            { icon: '🥖', vn: 'Mua bánh mì giòn...', en: 'Buying crispy baguette...' },
+            { icon: '🥩', vn: 'Chọn thịt ngon...', en: 'Selecting good meat...' },
+            { icon: '🔥', vn: 'Nướng thịt...', en: 'Grilling the pork...' },
+            { icon: '🥒', vn: 'Cắt dưa chuột...', en: 'Slicing cucumber...' },
+            { icon: '🥕', vn: 'Thêm đồ chua...', en: 'Adding pickled carrots...' },
+            { icon: '🌿', vn: 'Rắc rau thơm...', en: 'Sprinkling fresh herbs...' },
+            { icon: '🌶️', vn: 'Thêm ớt...', en: 'Adding chili...' },
+            { icon: '🧈', vn: 'Phết pa-tê...', en: 'Spreading pâté...' },
+            { icon: '🫗', vn: 'Xịt nước tương...', en: 'Drizzling soy sauce...' },
+            { icon: '✨', vn: 'Hoàn thành!', en: 'Complete!' },
+        ];
+
+        const celebrationEmojis = ['🎉', '🎊', '🥳', '🇻🇳', '🥖', '🍜', '☕'];
+
+        let currentStep = 0;
+        const stepIcon = document.getElementById('stepIcon');
+        const stepText = document.getElementById('stepText');
+        const stepTextEn = document.getElementById('stepTextEn');
+        const progressFill = document.getElementById('progressFill');
+        const cookingContainer = document.getElementById('cookingContainer');
+        const banhMiArt = document.getElementById('banhMiArt');
+        const messageBox = document.getElementById('messageBox');
+        const celebration = document.getElementById('celebration');
+
+        function updateStep() {
+            if (currentStep < cookingSteps.length) {
+                const step = cookingSteps[currentStep];
+                stepIcon.textContent = step.icon;
+                stepText.textContent = step.vn;
+                stepTextEn.textContent = step.en;
+                progressFill.style.width = ((currentStep + 1) / cookingSteps.length * 100) + '%';
+                currentStep++;
+                setTimeout(updateStep, 700);
+            } else {
+                // Cooking complete - show final result
+                setTimeout(() => {
+                    cookingContainer.classList.add('hidden');
+                    banhMiArt.classList.add('show');
+                    setTimeout(() => {
+                        messageBox.classList.add('show');
+                        // Start celebration animation
+                        let emojiIndex = 0;
+                        setInterval(() => {
+                            celebration.textContent = celebrationEmojis[emojiIndex];
+                            emojiIndex = (emojiIndex + 1) % celebrationEmojis.length;
+                        }, 400);
+                    }, 500);
+                }, 300);
+            }
+        }
+
+        // Start the cooking animation
+        setTimeout(updateStep, 500);
+    </script>
+</body>
+</html>`;
+}
 
 module.exports = {
     activate,
